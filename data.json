@@ -1,0 +1,12 @@
+{
+  "app": "outreach-ops",
+  "exportedAt": "2026-11-09T10:10:00Z",
+  "ops": [
+    {"id":"op-mw91mkcktlbo","code":"OUT-2026-106","date":"2026-11-10","clinic":"CLN-001","point":"LOC-001","service":"Nutrition","status":"Planned","dep":"09:00","ret":"13:00","leader":"st-ahmad","notes":"","team":[{"id":"st-ahmad","name":"أحمد طموس","role":"CHNP","phone":"0598981610"},{"id":"st-dalia","name":"داليا بعلوشة","role":"CHNP","phone":""},{"id":"st-mhabeel","name":"محمد الهبيل","role":"CHNP","phone":""}],"createdAt":"2026-11-09T09:13:05.182Z","updatedAt":"2026-11-09T09:30:05.046Z"}
+  ],
+  "staff": [
+    {"id":"st-ahmad","name":"أحمد طموس","role":"CHNP","clinic":"CLN-001","phone":"0598981610"},
+    {"id":"st-dalia","name":"داليا بعلوشة","role":"CHNP","clinic":"CLN-001","phone":""},
+    {"id":"st-mhabeel","name":"محمد الهبيل","role":"CHNP","clinic":"CLN-001","phone":""}
+  ]
+}

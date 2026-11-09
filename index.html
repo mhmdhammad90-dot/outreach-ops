@@ -1,0 +1,757 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="عمليات Outreach: متابعة زيارات فرق الصحة والتغذية إلى المخيمات ومراكز الإيواء.">
+<title>عمليات Outreach</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=Readex+Pro:wght@500;600;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: field-ops console. Right rail (RTL) of sections, a working surface of tables and status chips; teal ink accent, clinic colours as identity chips. */
+:root{
+  /* Project HOPE palette — Navy 001280 · Blue 005EB8 · Teal 00A5B3 · Yellow F6B80F · Red D40E3E · Black / White */
+  --navy:#001280; --blue:#005EB8; --teal:#00A5B3; --yellow:#F6B80F; --red:#D40E3E;
+  --bg:#f5f6fa; --surface:#ffffff; --sunk:#eef0f6; --line:#dde1ec;
+  --ink:#000000; --muted:#555b6e; --accent:#001280; --accent-ink:#ffffff; --accent-soft:#e3e7f7;
+  --ok:#001280; --ok-soft:#e3e7f7; --warn:#000000; --warn-soft:#fdeab6; --bad:#D40E3E; --bad-soft:#fbe1e8; --info:#005EB8; --info-soft:#e0edf9;
+  --live:#00808b; --live-soft:#dcf3f5;
+  --rail:#001280; --rail-ink:#d6dcf5; --rail-active:#005EB8; --rail-mark:#00A5B3;
+  --c1:#005EB8; --c2:#D40E3E; --c3:#2b8c4e; --c4:#e8890c; --c5:#7b4cc2; --c6:#d14b8f; --c7:#00A5B3;
+  --f-display:"Readex Pro","IBM Plex Sans Arabic",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans Arabic",system-ui,"Segoe UI",Tahoma,sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  --r:10px;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#050a24; --surface:#0b1336; --sunk:#111b45; --line:#1f2a5c;
+  --ink:#ffffff; --muted:#a3abc9; --accent:#6cb0f0; --accent-ink:#000a4d; --accent-soft:#132463;
+  --ok:#8fb4ff; --ok-soft:#14215c; --warn:#F6B80F; --warn-soft:#3a2d06; --bad:#ff5c80; --bad-soft:#3d0a1b; --info:#6cb0f0; --info-soft:#0d2a52;
+  --live:#2fc6d2; --live-soft:#06343a;
+  --rail:#000a4d; --rail-ink:#c4cbea; --rail-active:#005EB8; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#050a24; --surface:#0b1336; --sunk:#111b45; --line:#1f2a5c;
+  --ink:#ffffff; --muted:#a3abc9; --accent:#6cb0f0; --accent-ink:#000a4d; --accent-soft:#132463;
+  --ok:#8fb4ff; --ok-soft:#14215c; --warn:#F6B80F; --warn-soft:#3a2d06; --bad:#ff5c80; --bad-soft:#3d0a1b; --info:#6cb0f0; --info-soft:#0d2a52;
+  --live:#2fc6d2; --live-soft:#06343a;
+  --rail:#000a4d; --rail-ink:#c4cbea; --rail-active:#005EB8; color-scheme:dark}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:14.5px;line-height:1.6;direction:rtl}
+button,input,select,textarea{font:inherit;color:inherit}
+h1,h2,h3{font-family:var(--f-display);margin:0;text-wrap:balance;line-height:1.3}
+.num{font-family:var(--f-display);font-variant-numeric:tabular-nums}
+.mono{font-family:var(--f-mono);font-size:12.5px;direction:ltr;unicode-bidi:isolate}
+.app{display:grid;grid-template-columns:240px minmax(0,1fr);min-height:100%}
+/* rail */
+.rail{background:var(--rail);color:var(--rail-ink);padding-block:20px;padding-inline:14px;display:flex;flex-direction:column;gap:18px;position:sticky;top:0;height:100vh;overflow:auto}
+.brand{display:flex;gap:10px;align-items:center;padding-inline:6px}
+.brand svg{flex:none}
+.brand b{font-family:var(--f-display);font-size:15px;color:#fff;display:block;line-height:1.2}
+.brand small{font-size:11.5px;opacity:.75}
+.nav{display:flex;flex-direction:column;gap:2px}
+.nav a{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 10px;border-radius:8px;color:inherit;text-decoration:none;font-weight:500}
+.nav a:hover{background:rgba(255,255,255,.05)}
+.nav a[aria-current="page"]{background:var(--rail-active);color:#fff}
+.nav a:focus-visible{outline:2px solid var(--rail-mark);outline-offset:1px}
+.nav .count{font-size:11.5px;background:rgba(255,255,255,.1);border-radius:999px;padding:0 8px;font-variant-numeric:tabular-nums}
+.live{margin-top:auto;font-size:12px;display:flex;gap:8px;align-items:center;padding-inline:6px;opacity:.85}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--teal);flex:none}
+.dot.off{background:var(--yellow)}
+/* main */
+main{min-width:0;padding-block:20px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+.topbar{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between}
+.topbar .title h1{font-size:22px}
+.topbar .title p{margin:2px 0 0;color:var(--muted);font-size:13px}
+.tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.search{position:relative}
+.search input{width:240px;max-width:100%;padding:8px 34px 8px 12px;border:1px solid var(--line);background:var(--surface);border-radius:8px}
+.search svg{position:absolute;right:10px;top:50%;transform:translateY(-50%);color:var(--muted)}
+.today{font-size:12.5px;color:var(--muted);border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:7px 10px;white-space:nowrap}
+.btn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:7px 12px;cursor:pointer;font-weight:500;white-space:nowrap}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.danger{color:var(--bad);border-color:var(--bad-soft)}
+.btn.sm{padding:4px 9px;font-size:12.5px}
+.btn:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+.localbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between}
+.banner{border:1px solid var(--warn-soft);background:var(--warn-soft);color:var(--warn);border-radius:8px;padding:8px 12px;font-size:13px}
+/* panels */
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
+.panel-h{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--line)}
+.panel-h h2{font-size:15.5px}
+.panel-h p{margin:0;color:var(--muted);font-size:12.5px}
+.panel-b{padding:14px 16px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.kpi{background:var(--surface);padding:12px 14px;display:flex;flex-direction:column;gap:2px}
+.kpi span{color:var(--muted);font-size:12.5px}
+.kpi b{font-family:var(--f-display);font-size:26px;font-variant-numeric:tabular-nums;line-height:1.2}
+.kpi small{font-size:11.5px;color:var(--muted)}
+.kpi.alert{box-shadow:inset 0 -3px 0 var(--yellow)}
+.kpi.good b{color:var(--live)}
+.filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.filters select,.field input,.field select,.field textarea{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:7px 10px;min-width:0}
+.filters .meta{margin-inline-start:auto;color:var(--muted);font-size:12.5px}
+.linkbtn{background:none;border:0;color:var(--accent);cursor:pointer;padding:0;font-weight:500}
+.grid2{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);gap:18px;align-items:start}
+.stack{display:flex;flex-direction:column;gap:18px;min-width:0}
+/* table */
+.tbl-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th{font-weight:500;color:var(--muted);font-size:12px;text-align:right;padding:9px 12px;background:var(--sunk);white-space:nowrap}
+td{padding:10px 12px;border-top:1px solid var(--line);vertical-align:middle}
+tr.click{cursor:pointer}
+tr.click:hover td{background:var(--sunk)}
+td .sub{display:block;color:var(--muted);font-size:12px}
+.empty{padding:28px 16px;text-align:center;color:var(--muted)}
+.empty b{display:block;color:var(--ink);font-family:var(--f-display);font-weight:500;margin-bottom:4px}
+/* chips */
+.chip{display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:2px 10px;font-size:12px;font-weight:500;white-space:nowrap;background:var(--sunk);color:var(--ink)}
+.chip i{width:7px;height:7px;border-radius:50%;background:currentColor;flex:none}
+.s-Planned{background:var(--sunk);color:var(--muted)}
+.s-Ready{background:var(--info-soft);color:var(--info)}
+.s-Departed,.s-OnSite,.s-Returning{background:var(--live-soft);color:var(--live)}
+.s-Completed{background:var(--ok-soft);color:var(--ok)}
+.s-Delayed{background:var(--warn-soft);color:var(--warn)}
+.s-OnHold{background:var(--bad-soft);color:var(--bad)}
+.clin{display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.clin::before{content:"";width:9px;height:9px;border-radius:2px;background:var(--cc)}
+select.status{padding:4px 8px;font-size:12.5px;border-radius:999px;border:1px solid var(--line);background:var(--surface)}
+/* alerts */
+.alerts{display:flex;flex-direction:column}
+.alert{display:flex;gap:10px;padding:10px 16px;border-top:1px solid var(--line);align-items:flex-start}
+.alert:first-child{border-top:0}
+.alert .bar{width:3px;align-self:stretch;border-radius:2px;background:var(--yellow);flex:none}
+.alert.bad .bar{background:var(--bad)}
+.alert p{margin:0;font-size:13px}
+.alert small{color:var(--muted)}
+.okline{margin:14px 16px;padding:10px 12px;border-radius:8px;background:var(--ok-soft);color:var(--ok);font-size:13px}
+/* clinic rows */
+.crow{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 10px;padding:10px 16px;border-top:1px solid var(--line)}
+.crow:first-child{border-top:0}
+.crow .meta{color:var(--muted);font-size:12px}
+.meter{grid-column:1/-1;height:5px;background:var(--sunk);border-radius:3px;overflow:hidden}
+.meter i{display:block;height:100%;background:var(--cc)}
+/* week */
+.week{display:grid;grid-template-columns:repeat(7,minmax(150px,1fr));gap:10px;overflow-x:auto;padding-bottom:4px}
+.day{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);display:flex;flex-direction:column;min-height:200px}
+.day.is-today{border-color:var(--accent);box-shadow:inset 0 3px 0 var(--accent)}
+.day-h{padding:10px 12px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:baseline;gap:6px}
+.day-h b{font-family:var(--f-display)}
+.day-h span{font-size:12px;color:var(--muted)}
+.day-b{padding:8px;display:flex;flex-direction:column;gap:6px;flex:1}
+.op-card{border:1px solid var(--line);border-radius:8px;padding:8px;background:var(--bg);cursor:pointer;text-align:right;display:flex;flex-direction:column;gap:3px;font-size:12.5px;border-inline-start:3px solid var(--cc)}
+.op-card:hover{border-color:var(--muted);border-inline-start-color:var(--cc)}
+.day .none{color:var(--muted);font-size:12px;text-align:center;margin:auto 0}
+/* cards grid */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:10px;border-top:3px solid var(--cc)}
+.card h3{font-size:15px}
+.card .en{color:var(--muted);font-size:12px;direction:ltr;text-align:right}
+.trio{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;text-align:center}
+.trio div{background:var(--sunk);border-radius:8px;padding:6px}
+.trio b{display:block;font-family:var(--f-display);font-size:18px;font-variant-numeric:tabular-nums}
+.trio span{font-size:11.5px;color:var(--muted)}
+dl.kv{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 10px;margin:0;font-size:13px}
+dl.kv dt{color:var(--muted)}
+dl.kv dd{margin:0}
+/* map */
+.map svg{width:100%;height:auto;display:block}
+.map .legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--muted);padding:0 16px 14px}
+/* bars */
+.bars{display:flex;flex-direction:column;gap:10px}
+.barrow{display:grid;grid-template-columns:120px minmax(0,1fr) 70px;gap:10px;align-items:center;font-size:13px}
+.barrow .track{height:10px;background:var(--sunk);border-radius:5px;overflow:hidden}
+.barrow .track i{display:block;height:100%;background:var(--cc,var(--accent));border-radius:5px}
+.barrow .v{text-align:left;font-variant-numeric:tabular-nums;color:var(--muted)}
+/* staff form */
+.quick{display:grid;grid-template-columns:minmax(0,1.4fr) repeat(3,minmax(0,1fr)) auto;gap:8px;align-items:end}
+.field{display:flex;flex-direction:column;gap:4px;min-width:0}
+.field label{font-size:12px;color:var(--muted)}
+.avatar{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent);font-family:var(--f-display);font-weight:600;flex:none}
+.person{display:flex;gap:10px;align-items:center}
+.person b{font-weight:600}
+/* dialog */
+dialog{border:0;border-radius:14px;padding:0;width:min(680px,calc(100vw - 24px));max-height:calc(100vh - 32px);background:var(--surface);color:var(--ink);box-shadow:0 20px 60px rgba(0,0,0,.3)}
+dialog::backdrop{background:rgba(10,20,20,.45)}
+.dlg-h{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:16px 18px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--surface);z-index:1}
+.dlg-h h2{font-size:17px}
+.dlg-b{padding:16px 18px;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.dlg-b .full{grid-column:1/-1}
+.dlg-f{display:flex;gap:8px;justify-content:space-between;padding:14px 18px;border-top:1px solid var(--line);position:sticky;bottom:0;background:var(--surface)}
+.team{border:1px solid var(--line);border-radius:8px;max-height:200px;overflow:auto}
+.trow{display:flex;gap:8px;align-items:center;border-top:1px solid var(--line);font-size:13px}
+.trow:first-child{border-top:0}
+.trow.on{background:var(--sunk)}
+.trow.lead{background:var(--accent-soft)}
+.tpick{display:flex;gap:8px;align-items:center;padding:7px 10px;cursor:pointer;flex:1;min-width:0}
+.tpick .tag{font-size:11px;color:var(--muted)}
+.lpick{display:flex;gap:5px;align-items:center;padding:4px 10px;margin-inline-end:6px;border:1px solid var(--line);border-radius:999px;background:var(--surface);cursor:pointer;font-size:12px;font-weight:500;white-space:nowrap}
+.trow.lead .lpick{border-color:var(--accent);color:var(--accent)}
+.fpi{flex:none;color:var(--live)}
+.fp{display:inline-flex;vertical-align:-2px}
+.leadbar{margin-top:8px;display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;border:1.5px solid var(--accent);background:var(--accent-soft);border-radius:10px;padding:10px 12px}
+.leadbar.need{border-style:dashed;border-color:var(--yellow);background:var(--warn-soft);color:var(--warn);font-size:13px}
+.leadbar .who{display:flex;gap:10px;align-items:center}
+.leadbar .who small{display:block;font-size:11.5px;color:var(--muted);line-height:1.3}
+.leadbar .who b{display:block;font-family:var(--f-display);font-size:15px;line-height:1.3}
+.leadbar .ph{display:flex;flex-direction:column;gap:3px;min-width:0}
+.leadbar .ph label{font-size:11.5px;color:var(--muted)}
+.phrow{display:flex;gap:6px}
+.phrow input{width:150px;border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:6px 8px;font-family:var(--f-mono);font-size:14px}
+.leadbar .hint{font-size:11.5px;color:var(--muted);max-width:260px}
+.exp{padding:16px 18px;background:var(--sunk)}
+.exp-prev{display:grid;place-items:center;min-height:200px}
+.exp-prev img{display:block;max-height:60vh;width:auto;max-width:100%;border-radius:6px;box-shadow:0 6px 24px rgba(0,10,60,.18)}
+.inline-add{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) minmax(0,1fr) auto;gap:6px;margin-top:8px}
+.inline-add input,.inline-add select{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:6px 8px;min-width:0;font-size:13px}
+.report{grid-column:1/-1;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;background:var(--ok-soft);border-radius:10px;padding:12px}
+.report .ttl{grid-column:1/-1;font-family:var(--f-display);color:var(--ok);font-size:14px}
+.toast{position:fixed;bottom:calc(16px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:8px;font-size:13px;z-index:50;max-width:calc(100vw - 32px)}
+.muted{color:var(--muted)}
+.section-head{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;justify-content:space-between}
+.section-head h1{font-size:22px}
+.section-head p{margin:2px 0 0;color:var(--muted);font-size:13px;max-width:62ch}
+/* responsive */
+@media (max-width:980px){.grid2{grid-template-columns:1fr}}
+@media (max-width:820px){
+  .app{grid-template-columns:1fr}
+  .rail{position:sticky;top:env(safe-area-inset-top,0px);height:auto;z-index:5;padding-block:10px;flex-direction:row;align-items:center;gap:12px;overflow-x:auto;padding-left:max(12px,env(safe-area-inset-left,0px));padding-right:max(12px,env(safe-area-inset-right,0px))}
+  body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--rail)}
+  .brand small,.live{display:none}
+  .nav{flex-direction:row}
+  .nav a{white-space:nowrap;padding:7px 10px}
+  .nav .count{display:none}
+  .quick{grid-template-columns:1fr 1fr}
+  .quick .name{grid-column:1/-1}
+  .search input{width:100%}
+  .search{flex:1 1 200px}
+}
+@media (max-width:560px){
+  .dlg-b{grid-template-columns:1fr}
+  .report{grid-template-columns:1fr 1fr}
+  .inline-add{grid-template-columns:1fr 1fr}
+  .barrow{grid-template-columns:90px minmax(0,1fr) 56px}
+}
+@media (prefers-reduced-motion:no-preference){.nav a,.btn,tr.click td{transition:background-color .15s,border-color .15s}}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="rail">
+    <div class="brand">
+      <svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><rect width="34" height="34" rx="9" fill="#005EB8"/><circle cx="17" cy="17" r="3.2" fill="#ffffff"/><path d="M10.5 10.5a9.2 9.2 0 0 0 0 13M23.5 10.5a9.2 9.2 0 0 1 0 13M7 7a14 14 0 0 0 0 20M27 7a14 14 0 0 1 0 20" stroke="#ffffff" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg>
+      <div><b>عمليات Outreach</b><small>متابعة الزيارات الميدانية</small></div>
+    </div>
+    <nav class="nav" id="nav"></nav>
+    <div class="live"><span class="dot" id="liveDot"></span><span id="liveTxt">جارٍ الاتصال بالبيانات…</span></div>
+  </aside>
+  <main><div class="wrap" id="view"></div></main>
+</div>
+
+<dialog id="opDlg"><form id="opForm" method="dialog"></form></dialog>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+/* ---------- reference data (organisation config) ---------- */
+const CLINICS=[
+ {id:"CLN-001",ar:"عيادة عايدية",en:"Aaydia Clinic",area:"شمال غرب غزة - الشاطئ",mgr:"د. أحمد عابد",c:"--c1",frame:"أزرق"},
+ {id:"CLN-002",ar:"عيادة الطيارة",en:"Al Tayara Clinic",area:"الوسطى - دير البلح",mgr:"د. تهاني سمرة",c:"--c2",frame:"أحمر"},
+ {id:"CLN-003",ar:"عيادة التوبة",en:"Al Tawba Clinic",area:"الوسطى - دير البلح",mgr:"د. محمد عيد",c:"--c3",frame:"أخضر"},
+ {id:"CLN-004",ar:"عيادة الآثار",en:"Al Athar Clinic",area:"الوسطى - دير البلح الساحلي",mgr:"د. ربا أبو شعر",c:"--c4",frame:"برتقالي"},
+ {id:"CLN-005",ar:"عيادة المعسكر",en:"Al Moaskar Clinic",area:"الوسطى - مخيم دير البلح",mgr:"د. عبدالله أبو شمالة",c:"--c5",frame:"بنفسجي"},
+ {id:"CLN-006",ar:"عيادة العقاد",en:"Al Aqqad Clinic",area:"جنوب - خانيونس المواصي",mgr:"د. كرم ماضي",c:"--c6",frame:"وردي"},
+ {id:"CLN-007",ar:"عيادة الحساينة",en:"Al-Hasayna Clinic",area:"الوسطى - غرب النصيرات",mgr:"د. شرف الدين الصرفندي",c:"--c7",frame:"تركوازي"}];
+const PT_TYPES={Camp:"مخيم نزوح",Shelter:"مركز إيواء",Community:"منطقة مجتمعية",Distribution:"نقطة توزيع",Mobile:"نقطة عيادة متنقلة"};
+const P=(id,ar,en,addr,cl,type,visits,lat,lon)=>({id:"LOC-"+String(id).padStart(3,"0"),ar,en,addr,clinic:"CLN-00"+cl,type,visits,lat,lon});
+const POINTS=[
+ P(1,"مخيم الكرامة","AL Karama Camp","غرب غزة - الشاطئ - بالقرب من مخازن الغذاء العالمي",1,"Camp",16,31.5319,34.4405),
+ P(2,"مخيم الجزيرة","Al Jazeera Camp","ميناء أبو حصيرة – فندق الجزيرة",1,"Camp",12,31.5299,34.4388),
+ P(3,"مخيم شراب","Sharab Camp","أرض شراب – خلف مستشفى الأقصى",2,"Camp",14,31.4206,34.3599),
+ P(4,"مخيم نوى","Nawa Camp","أرض نوى خلف عيادة الطيارة شرقاً",2,"Camp",19,31.4152,34.3595),
+ P(5,"مخيم أبو جميزة","Abu Jumayza Camp","دير البلح شارع البيئة",3,"Camp",22,31.4157,34.3413),
+ P(6,"مخيم الهدى قباجة","Al-Huda Kabaja Camp","دير البلح في محيط عيادة التوبة",3,"Camp",18,31.4213,34.3409),
+ P(7,"مخيم التوبة","Al Tawba Camp","دير البلح في محيط عيادة التوبة",3,"Camp",24,31.4192,34.3407),
+ P(8,"منطقة الآثار","Al Athar Area","محيط عيادة الآثار",4,"Distribution",20,31.4190,34.3313),
+ P(9,"مخيم السلام","Al Salam Camp","دير البلح شارع البحر أرض فياض مقابل استراحة الجزيرة",4,"Camp",25,31.4155,34.3310),
+ P(10,"مخيم النجوم","Al Nojoom Camp","مقابل مبنى الصليب الأحمر",4,"Camp",15,31.4192,34.3331),
+ P(11,"مخيم ريفيرا","Rivera Camp","دير البلح شارع الرشيد",4,"Camp",17,31.4168,34.3287),
+ P(12,"آبار التحلية","Abar Al Tahlya","دير البلح آبار التحلية",4,"Community",13,31.3992,34.3075),
+ P(13,"مخيم النخيل","Al-Nakhil Camp","دير البلح مفترق النخيل",5,"Camp",21,31.4235,34.3424),
+ P(14,"مخيم زهور الأمل","Zuhour Al-Amal Camp","دير البلح",5,"Camp",16,31.4235,34.3375),
+ P(15,"مخيم الزهراء","Al-Zahra Camp","دير البلح بجوار مسجد فاطمة الزهراء",5,"Camp",18,31.4225,34.3377),
+ P(16,"مخيم الهلال","Al-Hilal Camp","دير البلح بجانب مبنى الهلال",5,"Camp",23,31.4219,34.3424),
+ P(17,"مخيم ابن تيمية","Ibn Taymiyya Camp","دير البلح - المعسكر",5,"Camp",26,31.4249,34.3416),
+ P(18,"منطقة العقاد","Al Aqqad Area","محيط عيادة العقاد",6,"Community",22,31.3667,34.2734),
+ P(19,"مخيم الأنوار","Al Anwar Camp","نقطة الموبايل كلينك",6,"Mobile",14,31.3668,34.2745),
+ P(20,"مركز إيواء جرار القدوة","Jarar al qedwa Shelter","مواصي خانيونس",6,"Shelter",17,31.3669,34.2766),
+ P(21,"مخيم ناهل اللحام","Nahil Al-Lahham Camp","مواصي خانيونس",6,"Camp",19,31.3645,34.2739),
+ P(22,"مخيم الشاطئ \"النص\"","Al-Shati Camp \"Al-Nus\"","مواصي خانيونس – الشاطئ (النص)",6,"Camp",24,31.3666,34.2704),
+ P(23,"مخيم أبو حسين","Abu al-Hussein camp","النصيرات أرض أبو مهادي",7,"Camp",15,31.4577,34.3740),
+ P(24,"مخيم الحساينة","Al-Hasayna camp","النصيرات منطقة الحساينة",7,"Camp",20,31.4528,34.3790),
+ P(25,"مخيم النويري حية","Al-Nuwairi Hayyah camp","النصيرات منطقة النويري",7,"Camp",13,31.4579,34.3763),
+ P(26,"مخيم النويري","Al-Nuwairi camp","النصيرات - منطقة النويري بجوار شاليه سي بتيش",7,"Camp",18,31.4575,34.3708)];
+const STATUSES=[["Planned","مخططة"],["Ready","جاهزة"],["Departed","غادرت"],["OnSite","في الموقع"],["Returning","في طريق العودة"],["Completed","مكتملة"],["Delayed","متأخرة"],["OnHold","مؤجلة"]];
+const ST=Object.fromEntries(STATUSES);
+const ACTIVE=["Departed","OnSite","Returning"];
+const SERVICES=[["Health + Nutrition","صحية وتغذوية"],["Health","صحية فقط"],["Nutrition","تغذية"],["Immunization","تطعيمات"],["MHPSS","دعم نفسي واجتماعي"]];
+const SV=Object.fromEntries(SERVICES);
+const ROLES=[["Doctor","طبيب"],["Nurse","ممرض/ة"],["Midwife","قابلة قانونية"],["Nutrition Officer","أخصائي تغذية"],["CHNP","CHNP"],["Team Leader","قائد فريق"],["Data Collector","مدخل بيانات"],["Support Staff","دعم لوجستي"]];
+const RL=Object.fromEntries(ROLES);
+const DAYS=["الأحد","الإثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"];
+const clinic=id=>CLINICS.find(c=>c.id===id)||{ar:"—",c:"--muted"};
+const point=id=>POINTS.find(p=>p.id===id)||{ar:"—"};
+
+/* ---------- state ---------- */
+const S={ops:[],staff:[],ready:{ops:false,staff:false},mode:"loading",readOnly:false,
+  f:{clinic:"",status:"",service:"",range:"today",q:"",ptType:"",ptClinic:"",stClinic:"",stRole:"",weekOffset:0,weekClinic:""},editStaff:null};
+let db=null;
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const pad=n=>String(n).padStart(2,"0");
+const iso=d=>d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
+const todayISO=()=>iso(new Date());
+const nowHM=()=>{const d=new Date();return pad(d.getHours())+":"+pad(d.getMinutes())};
+function weekStart(off=0){const d=new Date();d.setHours(0,0,0,0);const back=(d.getDay()+1)%7;d.setDate(d.getDate()-back+off*7);return d} // week starts Saturday
+const weekDates=(off=0)=>{const s=weekStart(off);return Array.from({length:7},(_,i)=>{const d=new Date(s);d.setDate(s.getDate()+i);return d})};
+const fmtDay=d=>DAYS[d.getDay()];
+const N=n=>Number(n||0).toLocaleString("en-US");
+
+function toast(msg){const t=$("#toast");t.textContent=msg;t.hidden=false;clearTimeout(toast.t);toast.t=setTimeout(()=>t.hidden=true,2600)}
+function errMsg(e){
+  if(e&&e.code==="invalid_argument"){S.readOnly=true;return "لا تملك صلاحية التعديل على هذه البيانات."}
+  if(e&&e.code==="quota_exceeded")return "امتلأت سعة قاعدة البيانات. احذف عمليات قديمة ثم حاول مجدداً.";
+  return "تعذّر الحفظ الآن. تحقق من الاتصال وحاول مرة أخرى."}
+
+/* ---------- data layer ---------- */
+const LS="outreach-local-v1";
+function loadLocal(){try{const d=JSON.parse(localStorage.getItem(LS)||"{}");S.ops=d.ops||[];S.staff=d.staff||[]}catch(e){}}
+function saveLocal(){try{localStorage.setItem(LS,JSON.stringify({ops:S.ops,staff:S.staff}))}catch(e){}}
+async function put(col,id,data){
+  if(db){try{await db.collection(col).doc(id).set(data);return true}catch(e){toast(errMsg(e));render();return false}}
+  const arr=S[col];const i=arr.findIndex(x=>x.id===id);const rec={id,...data};if(i>=0)arr[i]=rec;else arr.push(rec);saveLocal();render();return true}
+async function del(col,id){
+  if(db){try{await db.collection(col).doc(id).delete();return true}catch(e){toast(errMsg(e));return false}}
+  S[col]=S[col].filter(x=>x.id!==id);saveLocal();render();return true}
+const newId=p=>p+"-"+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+
+async function boot(){
+  let api=null;
+  try{if(window.claude&&window.claude.use)api=await window.claude.use("db")}catch(e){}
+  if(!api){S.mode="local";loadLocal();
+    let fresh=true;try{fresh=!localStorage.getItem(LS)}catch(e){}
+    if(fresh&&!S.ops.length&&!S.staff.length){try{const r=await fetch("data.json",{cache:"no-store"});if(r.ok){const d=await r.json();S.ops=d.ops||[];S.staff=d.staff||[];saveLocal()}}catch(e){}}
+    S.ready.ops=S.ready.staff=true;setLive();render();return}
+  db=api;S.mode="live";setLive();
+  try{const u=await window.claude.use("user");if(u){const w=await u.can("data.write");if(w===false)S.readOnly=true}}catch(e){}
+  const timer=setTimeout(()=>{if(!S.ready.ops){S.mode="stale";setLive();render()}},10000);
+  const sub=(col)=>db.collection(col).onSnapshot(s=>{
+      S[col]=s.docs.map(d=>({id:d.id,...d.data()}));
+      if(!s.metadata.fromCache){S.ready[col]=true;if(S.mode==="stale"){S.mode="live";setLive()}}
+      if(S.ready.ops)clearTimeout(timer);
+      render()},
+    e=>{clearTimeout(timer);S.mode="error";S.ready[col]=true;setLive();render()});
+  sub("ops");sub("staff");
+}
+function setLive(){
+  const m={loading:["جارٍ الاتصال بالبيانات…",1],live:["البيانات متزامنة مباشرة مع الفريق",1],stale:["تعذّر الوصول للبيانات بعد، قد تكون غير محدّثة",0],error:["انقطع الاتصال بالبيانات المشتركة",0],local:["البيانات محفوظة على هذا المتصفح",1]}[S.mode];
+  $("#liveTxt").textContent=m[0];$("#liveDot").className="dot"+(m[1]?"":" off")}
+
+/* ---------- derived ---------- */
+function inRange(o,r){if(r==="all")return true;if(r==="today")return o.date===todayISO();const w=weekDates(0);return o.date>=iso(w[0])&&o.date<=iso(w[6])}
+function matchQ(o,q){if(!q)return true;q=q.trim();const hay=[o.code,clinic(o.clinic).ar,point(o.point).ar,point(o.point).en,(o.team||[]).map(t=>t.name).join(" "),o.notes].join(" ").toLowerCase();return hay.includes(q.toLowerCase())}
+const sortOps=a=>[...a].sort((x,y)=>(x.date+x.dep).localeCompare(y.date+y.dep));
+function late(o){return o.date===todayISO()&&["Planned","Ready"].includes(o.status)&&o.dep&&o.dep<nowHM()}
+const rep=o=>o.report||{};
+
+/* ---------- views ---------- */
+const VIEWS=[["overview","نظرة عامة"],["ops","العمليات"],["week","الخطة الأسبوعية"],["clinics","العيادات"],["points","النقاط والمخيمات"],["staff","الكوادر الميدانية"],["reports","التقارير"]];
+const cur=()=>{const h=location.hash.slice(1);return VIEWS.some(v=>v[0]===h)?h:"overview"};
+function renderNav(){
+  const counts={ops:S.ops.length,clinics:CLINICS.length,points:POINTS.length,staff:S.staff.length};
+  $("#nav").innerHTML=VIEWS.map(([k,l])=>`<a href="#${k}" ${cur()===k?'aria-current="page"':""}><span>${l}</span>${counts[k]!=null?`<span class="count">${counts[k]}</span>`:""}</a>`).join("")}
+
+function opts(list,sel,all){return (all?`<option value="">${all}</option>`:"")+list.map(([v,l])=>`<option value="${esc(v)}" ${v===sel?"selected":""}>${esc(l)}</option>`).join("")}
+const clinicOpts=(sel,all)=>opts(CLINICS.map(c=>[c.id,c.ar]),sel,all);
+const chip=s=>`<span class="chip s-${s}"><i></i>${ST[s]||s}</span>`;
+const clin=id=>`<span class="clin" style="--cc:var(${clinic(id).c})">${esc(clinic(id).ar)}</span>`;
+const plural=n=>n===1?"فرد واحد":n===2?"فردان":n<=10?n+" أفراد":n+" فرداً";
+const teamTxt=o=>{const t=o.team||[];if(!t.length)return '<span class="muted">لم يُحدد</span>';const lead=t.find(x=>x.id===o.leader);if(!lead)return `<span class="muted">بدون Focal Point</span><span class="sub">${plural(t.length)}</span>`;const ph=lead.phone||(S.staff.find(s=>s.id===lead.id)||{}).phone;return `${esc(lead.name)} <span class="fp" title="Focal Point"><svg class="fpi" width="13" height="13" viewBox="0 0 14 14" aria-hidden="true"><circle cx="7" cy="7" r="5.4" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="7" cy="7" r="2.2" fill="currentColor"/></svg></span><span class="sub">${ph?`<span class="mono">${esc(ph)}</span> · `:""}${plural(t.length)}</span>`};
+const canWrite=()=>!S.readOnly&&S.mode!=="error";
+const addBtn=(label="عملية جديدة")=>`<button class="btn primary" data-act="new-op" ${canWrite()?"":"disabled"}><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M7 1v12M1 7h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>${label}</button>`;
+
+function topbar(title,sub){
+  const d=new Date();
+  return `<div class="topbar"><div class="title"><h1>${title}</h1>${sub?`<p>${sub}</p>`:""}</div>
+  <div class="tools"><label class="search"><input id="q" type="search" placeholder="بحث: كود، عيادة، مخيم، اسم…" value="${esc(S.f.q)}" aria-label="بحث"><svg width="15" height="15" viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.6" fill="none"/><path d="M11 11l3.5 3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></label>
+  <span class="today">${fmtDay(d)} · <span class="mono">${iso(d)}</span></span>${addBtn()}</div></div>
+  ${S.mode==="local"?`<div class="banner localbar"><span>البيانات محفوظة على هذا المتصفح فقط. نزّل نسخة احتياطية بانتظام، واستعدها على أي جهاز آخر لنقل البيانات.</span><span class="filters"><button class="btn sm" data-act="backup">تنزيل نسخة احتياطية</button><label class="btn sm" for="restoreFile">استعادة من ملف</label><input id="restoreFile" type="file" accept=".json,application/json" hidden></span></div>`:""}
+  ${S.readOnly?`<div class="banner">صلاحيتك للعرض فقط. اطلب من صاحب الصفحة صلاحية "مساهم" لتعديل العمليات.</div>`:""}`}
+
+function opsTable(list,{compact}={}){
+  if(!list.length)return `<div class="empty"><b>لا توجد عمليات مطابقة</b>${S.ops.length?"غيّر الفلاتر أو نطاق التاريخ.":"أضف أول عملية Outreach لتظهر هنا."}</div>`;
+  return `<div class="tbl-wrap"><table><thead><tr><th>الكود</th>${compact?"":"<th>التاريخ</th>"}<th>العيادة ← المكان</th><th>الخدمة</th><th>الفريق</th><th>الانطلاق / العودة</th><th>الحالة</th></tr></thead><tbody>
+  ${list.map(o=>`<tr class="click" data-open="${esc(o.id)}"><td class="mono">${esc(o.code)}</td>${compact?"":`<td class="mono">${esc(o.date)}<span class="sub" style="font-family:var(--f-body)">${fmtDay(new Date(o.date+"T00:00"))}</span></td>`}
+  <td>${clin(o.clinic)}<span class="sub">${esc(point(o.point).ar)}</span></td><td>${esc(SV[o.service]||o.service)}</td><td>${teamTxt(o)}</td>
+  <td class="mono">${esc(o.dep)} – ${esc(o.ret)}</td>
+  <td data-stop>${canWrite()?`<select class="status" data-status="${esc(o.id)}" aria-label="تغيير الحالة">${opts(STATUSES,o.status)}</select>`:chip(o.status)}</td></tr>`).join("")}
+  </tbody></table></div>`}
+
+function vOverview(){
+  const t=todayISO();const today=S.ops.filter(o=>o.date===t);
+  const f=S.f;const list=sortOps(S.ops.filter(o=>(!f.clinic||o.clinic===f.clinic)&&(!f.status||o.status===f.status)&&(!f.service||o.service===f.service)&&inRange(o,f.range)&&matchQ(o,f.q)));
+  const alerts=[...S.ops.filter(o=>["Delayed","OnHold"].includes(o.status)).map(o=>({o,bad:o.status==="OnHold",msg:o.status==="OnHold"?"العملية مؤجلة":"العملية متأخرة عن موعدها"})),...S.ops.filter(late).map(o=>({o,bad:false,msg:`مرّ موعد الانطلاق ${o.dep} ولم تبدأ بعد`}))];
+  const ben=today.reduce((a,o)=>a+(+rep(o).ben||0),0);
+  return topbar("نظرة عامة","متابعة زيارات فرق الصحة والتغذية إلى المخيمات ومراكز الإيواء.")+`
+  <div class="kpis">
+    <div class="kpi"><span>عمليات اليوم</span><b>${N(today.length)}</b><small>مخطط لها</small></div>
+    <div class="kpi good"><span>فرق في الميدان</span><b>${N(today.filter(o=>ACTIVE.includes(o.status)).length)}</b><small>غادرت أو في الموقع</small></div>
+    <div class="kpi"><span>منجزة اليوم</span><b>${N(today.filter(o=>o.status==="Completed").length)}</b><small>عادت للعيادة</small></div>
+    <div class="kpi ${alerts.length?"alert":""}"><span>متأخرة / مؤجلة</span><b>${N(alerts.length)}</b><small>تتطلب متابعة</small></div>
+    <div class="kpi"><span>العيادات</span><b>${CLINICS.length}</b><small>عيادات مشاركة</small></div>
+    <div class="kpi"><span>نقاط Outreach</span><b>${POINTS.length}</b><small>مخيمات وإيواء</small></div>
+    <div class="kpi"><span>مستفيدو اليوم</span><b>${N(ben)}</b><small>من تقارير الزيارات</small></div>
+  </div>
+  <div class="grid2">
+    <section class="panel"><div class="panel-h"><h2>العمليات</h2><a class="linkbtn" href="#ops">الجدول الكامل ←</a></div>
+      <div class="panel-b" style="border-bottom:1px solid var(--line)"><div class="filters">
+        <select data-f="clinic" aria-label="العيادة">${clinicOpts(f.clinic,"كل العيادات")}</select>
+        <select data-f="status" aria-label="الحالة">${opts(STATUSES,f.status,"كل الحالات")}</select>
+        <select data-f="service" aria-label="الخدمة">${opts(SERVICES,f.service,"كل الخدمات")}</select>
+        <select data-f="range" aria-label="النطاق">${opts([["today","اليوم فقط"],["week","هذا الأسبوع"],["all","كل التواريخ"]],f.range)}</select>
+        <span class="meta">${N(list.length)} عملية · <button class="linkbtn" data-act="reset">إعادة الضبط</button></span></div></div>
+      ${opsTable(list)}
+    </section>
+    <div class="stack">
+      <section class="panel"><div class="panel-h"><h2>للمتابعة</h2><span class="chip ${alerts.length?"s-Delayed":"s-Completed"}">${alerts.length} عملية</span></div>
+        ${alerts.length?`<div class="alerts">${alerts.map(a=>`<div class="alert ${a.bad?"bad":""}"><span class="bar"></span><div><p><b class="mono">${esc(a.o.code)}</b> · ${esc(point(a.o.point).ar)}</p><small>${a.msg} · ${esc(clinic(a.o.clinic).ar)}</small></div></div>`).join("")}</div>`:`<div class="okline">كل الزيارات تسير حسب الخطة.</div>`}
+      </section>
+      <section class="panel"><div class="panel-h"><h2>العيادات</h2><a class="linkbtn" href="#clinics">كل العيادات ←</a></div>
+        <div>${CLINICS.map(c=>{const pts=POINTS.filter(p=>p.clinic===c.id).length,st=S.staff.filter(s=>s.clinic===c.id).length,td=today.filter(o=>o.clinic===c.id).length;return `<div class="crow" style="--cc:var(${c.c})"><div>${clin(c.id)}<div class="meta">${esc(c.area)}</div></div><div class="meta" style="text-align:left">${pts} نقاط · ${st} كادر<br>${td} عملية اليوم</div><div class="meter"><i style="width:${Math.min(100,st/4*100)}%"></i></div></div>`}).join("")}</div>
+      </section>
+    </div>
+  </div>`}
+
+function vOps(){
+  const f=S.f;const list=sortOps(S.ops.filter(o=>(!f.clinic||o.clinic===f.clinic)&&(!f.status||o.status===f.status)&&(!f.service||o.service===f.service)&&matchQ(o,f.q))).reverse();
+  return topbar("سجل عمليات Outreach","كل العمليات المجدولة والمنفذة. اضغط على أي صف لتعديله أو إغلاقه بتقرير زيارة.")+`
+  <section class="panel"><div class="panel-h"><div class="filters">
+    <select data-f="clinic" aria-label="العيادة">${clinicOpts(f.clinic,"كل العيادات")}</select>
+    <select data-f="status" aria-label="الحالة">${opts(STATUSES,f.status,"كل الحالات")}</select>
+    <select data-f="service" aria-label="الخدمة">${opts(SERVICES,f.service,"كل الخدمات")}</select>
+    <button class="linkbtn" data-act="reset">إلغاء الفلاتر</button></div>
+    <div class="filters"><span class="meta">${N(list.length)} من ${N(S.ops.length)} عملية</span><button class="btn sm" data-act="csv-ops">تصدير CSV</button></div></div>
+    ${!S.ready.ops?`<div class="empty"><b>جارٍ تحميل العمليات…</b></div>`:opsTable(list)}
+  </section>`}
+
+function vWeek(){
+  const w=weekDates(S.f.weekOffset),t=todayISO();
+  const ops=S.ops.filter(o=>!S.f.weekClinic||o.clinic===S.f.weekClinic);
+  const total=ops.filter(o=>o.date>=iso(w[0])&&o.date<=iso(w[6])).length;
+  const covered=new Set(ops.filter(o=>o.date>=iso(w[0])&&o.date<=iso(w[6])).map(o=>o.point)).size;
+  return topbar("الخطة الأسبوعية",`من السبت <span class="mono">${iso(w[0])}</span> إلى الجمعة <span class="mono">${iso(w[6])}</span>`)+`
+  <div class="filters">
+    <button class="btn sm" data-act="wk" data-d="-1">→ الأسبوع السابق</button><button class="btn sm" data-act="wk" data-d="0">هذا الأسبوع</button><button class="btn sm" data-act="wk" data-d="1">الأسبوع التالي ←</button>
+    <select data-f="weekClinic" aria-label="العيادة">${clinicOpts(S.f.weekClinic,"كل العيادات")}</select>
+    <span class="meta">${N(total)} عملية · تغطي ${covered} من ${POINTS.length} نقطة</span></div>
+  <div class="week">${w.map(d=>{const ds=iso(d);const list=sortOps(ops.filter(o=>o.date===ds));return `<div class="day ${ds===t?"is-today":""}"><div class="day-h"><b>${fmtDay(d)}</b><span class="mono">${ds.slice(5)}</span></div><div class="day-b">
+    ${list.length?list.map(o=>`<button class="op-card" style="--cc:var(${clinic(o.clinic).c})" data-open="${esc(o.id)}"><b>${esc(point(o.point).ar)}</b><span class="muted">${esc(clinic(o.clinic).ar)} · <span class="mono">${esc(o.dep)}</span></span>${chip(o.status)}</button>`).join(""):`<span class="none">لا توجد زيارات</span>`}
+    ${canWrite()?`<button class="btn sm" style="justify-content:center;margin-top:auto" data-act="new-op" data-date="${ds}">+ إضافة</button>`:""}</div></div>`}).join("")}</div>`}
+
+function vClinics(){
+  return topbar("العيادات","العيادات التي تخرج منها الفرق، مع الكوادر والمخيمات التابعة لكل عيادة.")+`
+  <div class="cards">${CLINICS.map(c=>{const pts=POINTS.filter(p=>p.clinic===c.id),st=S.staff.filter(s=>s.clinic===c.id).length,ops=S.ops.filter(o=>o.clinic===c.id).length;return `<article class="card" style="--cc:var(${c.c})">
+    <div><h3>${esc(c.ar)}</h3><div class="en">${esc(c.en)}</div></div>
+    <div class="trio"><div><b>${pts.length}</b><span>نقاط تابعة</span></div><div><b>${st}</b><span>كوادر</span></div><div><b>${ops}</b><span>عمليات</span></div></div>
+    <dl class="kv"><dt>المنطقة</dt><dd>${esc(c.area)}</dd><dt>المدير</dt><dd>${esc(c.mgr)}</dd><dt>الإطار</dt><dd>${c.frame}</dd><dt>النقاط</dt><dd>${pts.map(p=>esc(p.ar)).join("، ")}</dd></dl>
+    ${canWrite()?`<button class="btn sm" data-act="new-op" data-clinic="${c.id}">إضافة عملية لهذه العيادة</button>`:""}</article>`}).join("")}</div>`}
+
+function mapSVG(pts){
+  const W=640,H=380,m=36,la=[31.355,31.54],lo=[34.265,34.45];
+  const x=v=>m+(v-lo[0])/(lo[1]-lo[0])*(W-2*m),y=v=>H-m-(v-la[0])/(la[1]-la[0])*(H-2*m);
+  const grid=[31.38,31.42,31.46,31.50].map(v=>`<line x1="${m}" x2="${W-m}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)" stroke-dasharray="3 4"/><text x="${W-m+4}" y="${y(v)+4}" font-size="10" fill="var(--muted)" font-family="IBM Plex Mono,monospace">${v.toFixed(2)}°N</text>`).join("");
+  const labels=[["غزة",31.52,34.415],["دير البلح",31.405,34.335],["النصيرات",31.468,34.37],["خانيونس المواصي",31.352,34.285]].map(([t,a,b])=>`<text x="${x(b)}" y="${y(a)}" font-size="12" fill="var(--muted)" font-family="IBM Plex Sans Arabic,sans-serif" text-anchor="middle">${t}</text>`).join("");
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="مواقع النقاط حسب الإحداثيات">${grid}${labels}
+   <text x="${m}" y="${m-12}" font-size="11" fill="var(--muted)" font-family="IBM Plex Sans Arabic,sans-serif">↑ شمال · الغرب يسار (جهة البحر)</text>
+   ${pts.map(p=>`<circle cx="${x(p.lon).toFixed(1)}" cy="${y(p.lat).toFixed(1)}" r="${4+p.visits/8}" fill="var(${clinic(p.clinic).c})" fill-opacity=".75" stroke="var(--surface)" stroke-width="1.5"><title>${esc(p.ar)} · ${p.visits} زيارة</title></circle>`).join("")}</svg>`}
+
+function vPoints(){
+  const f=S.f;const done=id=>S.ops.filter(o=>o.point===id&&o.status==="Completed").length;
+  const list=POINTS.filter(p=>(!f.ptType||p.type===f.ptType)&&(!f.ptClinic||p.clinic===f.ptClinic)&&(!f.q||(p.ar+p.en+p.addr).toLowerCase().includes(f.q.toLowerCase())));
+  return topbar("نقاط Outreach والمخيمات","مخيمات النزوح ومراكز الإيواء المستهدفة بخدمات الصحة والتغذية.")+`
+  <section class="panel map"><div class="panel-h"><h2>توزيع النقاط جغرافياً</h2><p>حجم الدائرة يعكس عدد الزيارات</p></div><div class="panel-b">${mapSVG(list)}</div>
+    <div class="legend">${CLINICS.map(c=>`<span class="clin" style="--cc:var(${c.c})">${esc(c.ar)}</span>`).join("")}</div></section>
+  <section class="panel"><div class="panel-h"><div class="filters">
+    <select data-f="ptType" aria-label="نوع الموقع">${opts(Object.entries(PT_TYPES),f.ptType,"كل أنواع المواقع")}</select>
+    <select data-f="ptClinic" aria-label="العيادة المشرفة">${clinicOpts(f.ptClinic,"كل العيادات المشرفة")}</select></div><span class="meta muted">${list.length} من ${POINTS.length} نقطة</span></div>
+    <div class="tbl-wrap"><table><thead><tr><th>النقطة</th><th>النوع</th><th>العيادة المشرفة</th><th>الزيارات</th><th>الإحداثيات</th></tr></thead><tbody>
+    ${list.map(p=>`<tr><td><b>${esc(p.ar)}</b><span class="sub">${esc(p.addr)}</span></td><td>${PT_TYPES[p.type]}</td><td>${clin(p.clinic)}</td><td class="num">${p.visits+done(p.id)}</td><td class="mono">${p.lat.toFixed(4)}, ${p.lon.toFixed(4)}</td></tr>`).join("")}
+    </tbody></table></div></section>`}
+
+function vStaff(){
+  const f=S.f,e=S.editStaff?S.staff.find(s=>s.id===S.editStaff):null;
+  const list=S.staff.filter(s=>(!f.stClinic||s.clinic===f.stClinic)&&(!f.stRole||s.role===f.stRole)&&(!f.q||s.name.includes(f.q))).sort((a,b)=>a.name.localeCompare(b.name,"ar"));
+  return topbar(`الكوادر (${S.staff.length})`,"أضف الكوادر وحدّد عيادة كل منهم ليظهروا عند اختيار فريق أي عملية.")+`
+  ${canWrite()?`<section class="panel"><div class="panel-h"><h2>${e?"تعديل بيانات "+esc(e.name):"إضافة سريعة لكادر"}</h2><p>يظهر فوراً في القائمة ولكل الفريق</p></div>
+  <form class="panel-b quick" id="staffForm">
+    <div class="field name"><label for="sf-name">الاسم *</label><input id="sf-name" required value="${esc(e?.name||"")}" placeholder="الاسم الكامل"></div>
+    <div class="field"><label for="sf-role">المسمى</label><select id="sf-role">${opts(ROLES,e?.role||"CHNP")}</select></div>
+    <div class="field"><label for="sf-clinic">العيادة</label><select id="sf-clinic">${clinicOpts(e?.clinic||f.stClinic||"CLN-001")}</select></div>
+    <div class="field"><label for="sf-phone">الهاتف</label><input id="sf-phone" type="tel" dir="ltr" value="${esc(e?.phone||"")}" placeholder="059xxxxxxx"></div>
+    <div class="filters"><button class="btn primary">${e?"حفظ":"إضافة"}</button>${e?`<button type="button" class="btn" data-act="cancel-staff">إلغاء</button>`:""}</div>
+  </form></section>`:""}
+  <section class="panel"><div class="panel-h"><div class="filters">
+    <select data-f="stClinic" aria-label="العيادة">${clinicOpts(f.stClinic,"كل العيادات")}</select>
+    <select data-f="stRole" aria-label="التخصص">${opts(ROLES,f.stRole,"كل التخصصات")}</select></div><span class="meta muted">${list.length} كادر</span></div>
+    ${!list.length?`<div class="empty"><b>${S.ready.staff?"لا يوجد كوادر بعد":"جارٍ التحميل…"}</b>${S.ready.staff?"أضف الكوادر من النموذج أعلاه.":""}</div>`:
+    `<div class="tbl-wrap"><table><thead><tr><th>الكادر</th><th>الدور</th><th>العيادة</th><th>الهاتف</th><th>في عمليات اليوم</th><th></th></tr></thead><tbody>
+    ${list.map(s=>{const busy=S.ops.some(o=>o.date===todayISO()&&!["Completed"].includes(o.status)&&(o.team||[]).some(t=>t.id===s.id));return `<tr><td><div class="person"><span class="avatar">${esc(s.name.trim()[0]||"؟")}</span><b>${esc(s.name)}</b></div></td><td>${esc(RL[s.role]||s.role)}</td><td>${clin(s.clinic)}</td><td class="mono">${esc(s.phone||"—")}</td><td>${busy?'<span class="chip s-OnSite"><i></i>في زيارة</span>':'<span class="chip s-Completed"><i></i>متاح</span>'}</td>
+    <td>${canWrite()?`<div class="filters" style="flex-wrap:nowrap"><button class="btn sm" data-act="edit-staff" data-id="${esc(s.id)}">تعديل</button>${S.confirmDel===s.id?`<button class="btn sm danger" data-act="del-staff" data-id="${esc(s.id)}">تأكيد الحذف</button>`:`<button class="btn sm danger" data-act="ask-del" data-id="${esc(s.id)}">حذف</button>`}</div>`:""}</td></tr>`}).join("")}
+    </tbody></table></div>`}</section>`}
+
+function vReports(){
+  const ops=S.ops,done=ops.filter(o=>o.status==="Completed");
+  const sum=k=>done.reduce((a,o)=>a+(+rep(o)[k]||0),0);
+  const pct=ops.length?Math.round(done.length/ops.length*100):0;
+  const max=Math.max(1,...CLINICS.map(c=>ops.filter(o=>o.clinic===c.id).length));
+  const groups=[["مكتملة",["Completed"],"--ok"],["نشطة في الميدان",ACTIVE,"--live"],["مخططة / جاهزة",["Planned","Ready"],"--info"],["متأخرة / مؤجلة",["Delayed","OnHold"],"--yellow"]];
+  const top=[...POINTS].map(p=>({...p,v:p.visits+done.filter(o=>o.point===p.id).length})).sort((a,b)=>b.v-a.v).slice(0,5);
+  return topbar("التقارير","نتائج الزيارات: الاستشارات الطبية، فحوصات MUAC، وحالات سوء التغذية.")+`
+  <div class="kpis">
+    <div class="kpi"><span>إجمالي العمليات</span><b>${N(ops.length)}</b><small>نسبة الإنجاز ${pct}%</small></div>
+    <div class="kpi"><span>المستفيدون</span><b>${N(sum("ben"))}</b><small>رعاية أولية وتغذية</small></div>
+    <div class="kpi"><span>استشارات طبية</span><b>${N(sum("cons"))}</b><small>من تقارير الزيارات</small></div>
+    <div class="kpi alert"><span>سوء تغذية متوسط MAM</span><b>${N(sum("mam"))}</b><small>مسجّلة للمتابعة</small></div>
+    <div class="kpi" style="--x:0"><span>سوء تغذية حاد SAM</span><b style="color:var(--bad)">${N(sum("sam"))}</b><small>حُوّلت للعلاج</small></div>
+  </div>
+  <div class="grid2">
+    <section class="panel"><div class="panel-h"><h2>العمليات حسب العيادة</h2></div><div class="panel-b bars">
+      ${CLINICS.map(c=>{const n=ops.filter(o=>o.clinic===c.id).length;return `<div class="barrow" style="--cc:var(${c.c})"><span>${esc(c.ar)}</span><div class="track"><i style="width:${n/max*100}%"></i></div><span class="v">${n} · ${ops.length?Math.round(n/ops.length*100):0}%</span></div>`}).join("")}
+    </div></section>
+    <section class="panel"><div class="panel-h"><h2>توزيع الحالات</h2></div><div class="panel-b bars">
+      ${groups.map(([l,st,c])=>{const n=ops.filter(o=>st.includes(o.status)).length;return `<div class="barrow" style="--cc:var(${c})"><span>${l}</span><div class="track"><i style="width:${ops.length?n/ops.length*100:0}%"></i></div><span class="v">${n}</span></div>`}).join("")}
+    </div>
+    <div class="panel-h" style="border-top:1px solid var(--line)"><h2>الأكثر زيارة</h2></div>
+    <div>${top.map((p,i)=>`<div class="crow"><div><b class="num">${i+1}.</b> ${esc(p.ar)}<div class="meta">${esc(clinic(p.clinic).ar)}</div></div><div class="num">${p.v} زيارة</div></div>`).join("")}</div></section>
+  </div>
+  <section class="panel"><div class="panel-h"><h2>تقارير الزيارات المكتملة</h2><button class="btn sm" data-act="csv-rep">تصدير CSV</button></div>
+  ${done.length?`<div class="tbl-wrap"><table><thead><tr><th>الكود</th><th>التاريخ</th><th>النقطة</th><th>المستفيدون</th><th>استشارات</th><th>MAM</th><th>SAM</th><th>ملاحظات</th></tr></thead><tbody>
+  ${sortOps(done).reverse().map(o=>`<tr class="click" data-open="${esc(o.id)}"><td class="mono">${esc(o.code)}</td><td class="mono">${esc(o.date)}</td><td>${esc(point(o.point).ar)}<span class="sub">${esc(clinic(o.clinic).ar)}</span></td><td class="num">${N(rep(o).ben)}</td><td class="num">${N(rep(o).cons)}</td><td class="num">${N(rep(o).mam)}</td><td class="num">${N(rep(o).sam)}</td><td>${esc(rep(o).note||"")}</td></tr>`).join("")}
+  </tbody></table></div>`:`<div class="empty"><b>لا توجد تقارير بعد</b>عند تحويل أي عملية إلى "مكتملة" يُطلب إدخال نتائج الزيارة وتظهر هنا.</div>`}</section>`}
+
+const RENDER={overview:vOverview,ops:vOps,week:vWeek,clinics:vClinics,points:vPoints,staff:vStaff,reports:vReports};
+function render(){
+  const a=document.activeElement,id=a&&a.id,pos=a&&a.selectionStart;
+  renderNav();$("#view").innerHTML=RENDER[cur()]();
+  if(id){const el=document.getElementById(id);if(el&&el.closest("#view")){el.focus();try{if(pos!=null)el.setSelectionRange(pos,pos)}catch(e){}}}
+}
+
+/* ---------- operation dialog ---------- */
+const staffPhone=id=>(S.staff.find(s=>s.id===id)||{}).phone||"";
+function openOp(op,preset={}){
+  const isNew=!op;
+  const o=op?JSON.parse(JSON.stringify(op)):{id:newId("op"),code:"OUT-"+new Date().getFullYear()+"-"+String(Math.floor(100+Math.random()*900)),date:preset.date||todayISO(),clinic:preset.clinic||S.f.clinic||"CLN-001",point:"",service:"Health + Nutrition",status:"Planned",dep:"09:00",ret:"13:00",team:[],leader:null,notes:""};
+  if(!o.point)o.point=(POINTS.find(p=>p.clinic===o.clinic)||{}).id;
+  o.team=o.team||[];
+  if(!o.leader){const tl=o.team.find(t=>t.role==="Team Leader");if(tl)o.leader=tl.id}
+  o.leadPhone=o.leader?(staffPhone(o.leader)||(o.team.find(t=>t.id===o.leader)||{}).phone||""):"";
+  const ro=!canWrite();
+  const dlg=$("#opDlg"),form=$("#opForm");
+  const teamHTML=()=>{const ids=new Set(o.team.map(t=>t.id));const mine=S.staff.filter(s=>s.clinic===o.clinic),other=S.staff.filter(s=>s.clinic!==o.clinic);
+    const row=(s,tag)=>{const on=ids.has(s.id),lead=o.leader===s.id;return `<div class="trow${on?" on":""}${lead?" lead":""}"><label class="tpick"><input type="checkbox" data-team="${esc(s.id)}" ${on?"checked":""} ${ro?"disabled":""}><span><b>${esc(s.name)}</b> · ${esc(RL[s.role]||s.role)} <span class="tag">${tag}</span></span></label>${on?`<label class="lpick"><input type="radio" name="leader" data-lead="${esc(s.id)}" ${lead?"checked":""} ${ro?"disabled":""}><svg class="fpi" width="13" height="13" viewBox="0 0 14 14" aria-hidden="true"><circle cx="7" cy="7" r="5.4" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="7" cy="7" r="2.2" fill="currentColor"/></svg><span>Focal Point</span></label>`:""}</div>`};
+    const extra=o.team.filter(t=>!S.staff.some(s=>s.id===t.id));
+    const all=[...mine.map(s=>row(s,"طاقم العيادة")),...other.map(s=>row(s,clinic(s.clinic).ar)),...extra.map(t=>row(t,"محذوف من السجل"))];
+    return all.length?all.join(""):`<div class="empty" style="padding:14px">لا يوجد كوادر بعد. أضف موظفاً من الأسفل.</div>`};
+  const leadHTML=()=>{if(!o.team.length)return "";const l=o.team.find(x=>x.id===o.leader);
+    if(!l)return `<div class="leadbar need">اختر الـFocal Point بالضغط على «Focal Point» بجانب أحد الأعضاء المختارين.</div>`;
+    return `<div class="leadbar"><div class="who"><span class="avatar">${esc(l.name.trim()[0]||"؟")}</span><div><small>Focal Point</small><b>${esc(l.name)}</b><small>${esc(RL[l.role]||l.role)}</small></div></div>
+      <div class="ph"><label for="lead-phone">رقم الاتصال</label><div class="phrow"><input id="lead-phone" type="tel" dir="ltr" value="${esc(o.leadPhone)}" placeholder="059xxxxxxx" ${ro?"disabled":""}><button type="button" class="btn sm" data-copyph ${o.leadPhone?"":"disabled"}>نسخ</button></div>${o.leadPhone?"":'<small class="hint">لا يوجد رقم مسجّل لهذا الكادر. أدخله هنا ويُحفظ في سجله أيضاً.</small>'}</div></div>`};
+  form.innerHTML=`<div class="dlg-h"><div><h2>${isNew?"عملية Outreach جديدة":"عملية <span class=\"mono\">"+esc(o.code)+"</span>"}</h2><span class="muted" style="font-size:12.5px">المكان والموعد والفريق</span></div><button type="button" class="btn sm" data-x aria-label="إغلاق">✕</button></div>
+  <fieldset class="dlg-b" style="border:0;margin:0" ${ro?"disabled":""}>
+    <div class="field"><label for="o-clinic">العيادة</label><select id="o-clinic">${clinicOpts(o.clinic)}</select></div>
+    <div class="field"><label for="o-point">مكان الزيارة</label><select id="o-point"></select></div>
+    <div class="field"><label for="o-date">التاريخ</label><input id="o-date" type="date" value="${esc(o.date)}" required></div>
+    <div class="field" style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><div class="field"><label for="o-dep">الانطلاق</label><input id="o-dep" type="time" value="${esc(o.dep)}"></div><div class="field"><label for="o-ret">العودة</label><input id="o-ret" type="time" value="${esc(o.ret)}"></div></div>
+    <div class="field"><label for="o-service">نوع الخدمة</label><select id="o-service">${opts(SERVICES,o.service)}</select></div>
+    <div class="field"><label for="o-status">الحالة</label><select id="o-status">${opts(STATUSES,o.status)}</select></div>
+    <div class="field full"><label>الفريق <span id="teamCount" class="muted"></span></label><div class="team" id="teamBox"></div><div id="leadBox"></div>
+      <div class="inline-add"><input id="na-name" placeholder="اسم موظف جديد" aria-label="اسم الموظف"><select id="na-role" aria-label="المسمى">${opts(ROLES,"Doctor")}</select><input id="na-phone" dir="ltr" placeholder="059…" aria-label="الهاتف"><button type="button" class="btn sm" data-addstaff>+ إضافة للفريق</button></div></div>
+    <div class="report" id="repBox" hidden><div class="ttl">نتائج الزيارة</div>
+      <div class="field"><label for="r-ben">المستفيدون</label><input id="r-ben" type="number" min="0" inputmode="numeric" value="${esc(rep(o).ben??"")}"></div>
+      <div class="field"><label for="r-cons">استشارات طبية</label><input id="r-cons" type="number" min="0" inputmode="numeric" value="${esc(rep(o).cons??"")}"></div>
+      <div class="field"><label for="r-mam">حالات MAM</label><input id="r-mam" type="number" min="0" inputmode="numeric" value="${esc(rep(o).mam??"")}"></div>
+      <div class="field"><label for="r-sam">حالات SAM</label><input id="r-sam" type="number" min="0" inputmode="numeric" value="${esc(rep(o).sam??"")}"></div>
+      <div class="field" style="grid-column:1/-1"><label for="r-note">ملاحظة التقرير</label><input id="r-note" value="${esc(rep(o).note||"")}" placeholder="مثال: نفاد حليب علاجي، تحويل حالتين للمستشفى"></div></div>
+    <div class="field full"><label for="o-notes">ملاحظات</label><textarea id="o-notes" rows="2" placeholder="المستلزمات الطبية، التنسيق مع المجتمع، ملاحظات التنقل…">${esc(o.notes||"")}</textarea></div>
+  </fieldset>
+  <div class="dlg-f"><div class="filters">${!isNew&&!ro?`<button type="button" class="btn danger" data-del>حذف</button>`:""}${!isNew?`<button type="button" class="btn" data-export>بطاقة الزيارة PDF / JPG</button>`:""}</div><div class="filters"><button type="button" class="btn" data-x>${ro?"إغلاق":"إلغاء"}</button>${ro?"":`<button type="submit" class="btn primary">${isNew?"حفظ وإعداد بطاقة الزيارة":"حفظ التعديلات"}</button>`}</div></div>`;
+  const fillPoints=()=>{const pts=POINTS.filter(p=>p.clinic===o.clinic);if(!pts.some(p=>p.id===o.point))o.point=pts[0]?.id;$("#o-point").innerHTML=opts(pts.map(p=>[p.id,`${p.ar} (${PT_TYPES[p.type]})`]),o.point)};
+  const fillTeam=()=>{$("#teamBox").innerHTML=teamHTML();$("#leadBox").innerHTML=leadHTML();$("#teamCount").textContent=`· تم اختيار ${o.team.length}`};
+  const showRep=()=>{$("#repBox").hidden=$("#o-status").value!=="Completed"};
+  const setLeader=id=>{o.leader=id;o.leadPhone=id?(staffPhone(id)||(o.team.find(t=>t.id===id)||{}).phone||""):""};
+  fillPoints();fillTeam();showRep();
+  form.oninput=e=>{if(e.target.id==="lead-phone"){o.leadPhone=e.target.value.trim();const b=form.querySelector("[data-copyph]");if(b)b.disabled=!o.leadPhone}};
+  form.onchange=e=>{const t=e.target;
+    if(t.id==="o-clinic"){o.clinic=t.value;fillPoints();fillTeam()}
+    if(t.id==="o-point")o.point=t.value;
+    if(t.id==="o-status")showRep();
+    if(t.dataset.lead){setLeader(t.dataset.lead);fillTeam()}
+    if(t.dataset.team){const id=t.dataset.team;const s=S.staff.find(x=>x.id===id)||o.team.find(x=>x.id===id);o.team=o.team.filter(x=>x.id!==id);
+      if(t.checked&&s){o.team.push({id:s.id,name:s.name,role:s.role,phone:s.phone||""});if(!o.leader)setLeader(s.id)}
+      else if(o.leader===id)setLeader(null);
+      fillTeam()}};
+  form.onclick=async e=>{
+    if(e.target.closest("[data-x]")){dlg.close();return}
+    if(e.target.closest("[data-copyph]")){const inp=$("#lead-phone");try{await navigator.clipboard.writeText(o.leadPhone);toast("نُسخ الرقم "+o.leadPhone)}catch(err){inp.select()}return}
+    if(e.target.closest("[data-export]")){showExport(S.ops.find(x=>x.id===o.id)||o);return}
+    if(e.target.closest("[data-addstaff]")){const name=$("#na-name").value.trim();if(!name){$("#na-name").focus();return}
+      const s={id:newId("st"),name,role:$("#na-role").value,clinic:o.clinic,phone:$("#na-phone").value.trim()};
+      const {id,...body}=s;if(await put("staff",id,body)){if(!S.staff.some(x=>x.id===id))S.staff.push(s);o.team.push({id,name,role:s.role,phone:s.phone});if(!o.leader)setLeader(id);$("#na-name").value=$("#na-phone").value="";fillTeam();toast("أُضيف "+name+" للفريق")}}
+    const d=e.target.closest("[data-del]");
+    if(d){if(d.dataset.sure){if(await del("ops",o.id)){dlg.close();toast("حُذفت العملية "+o.code)}}else{d.dataset.sure=1;d.textContent="اضغط مرة أخرى للتأكيد"}}};
+  form.onsubmit=async e=>{e.preventDefault();if(ro)return;
+    if(o.team.length&&!o.team.some(t=>t.id===o.leader)){$("#leadBox").scrollIntoView({block:"center"});toast("حدّد الـFocal Point قبل الحفظ");return}
+    const lp=(o.leadPhone||"").trim(),st=$("#o-status").value;
+    const team=o.team.map(t=>({id:t.id,name:t.name,role:t.role,phone:t.id===o.leader?lp:(staffPhone(t.id)||t.phone||"")}));
+    const rec={code:o.code,date:$("#o-date").value,clinic:o.clinic,point:$("#o-point").value,service:$("#o-service").value,status:st,dep:$("#o-dep").value,ret:$("#o-ret").value,team,leader:o.leader||null,notes:$("#o-notes").value.trim(),createdAt:o.createdAt||new Date().toISOString(),updatedAt:new Date().toISOString()};
+    if(st==="Completed"){const n=id=>{const v=$(id).value;return v===""?0:Math.max(0,parseInt(v,10)||0)};rec.report={ben:n("#r-ben"),cons:n("#r-cons"),mam:n("#r-mam"),sam:n("#r-sam"),note:$("#r-note").value.trim()}}
+    else if(o.report)rec.report=o.report;
+    if(!rec.date){$("#o-date").focus();return}
+    if(await put("ops",o.id,rec)){
+      const ls=S.staff.find(s=>s.id===o.leader);if(ls&&lp&&ls.phone!==lp){const {id,...b}=ls;put("staff",id,{...b,phone:lp})}
+      toast(isNew?"أُدرجت العملية "+rec.code:"حُفظت التعديلات");
+      if(isNew)showExport({id:o.id,...rec},true);else dlg.close()}};
+  dlg.showModal();
+}
+
+/* ---------- visit card: PDF / JPG ---------- */
+function loadJsPDF(){return window.jspdf?Promise.resolve(window.jspdf):new Promise((res,rej)=>{const s=document.createElement("script");s.src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";s.onload=()=>window.jspdf?res(window.jspdf):rej();s.onerror=rej;document.head.appendChild(s)})}
+async function saveFile(name,blob){
+  let dl=null;try{dl=window.claude&&await window.claude.use("downloads")}catch(e){}
+  if(dl){try{await dl.save({filename:name,data:blob});return true}catch(e){if(e&&e.code==="declined")return false}}
+  if(!window.claude){const u=URL.createObjectURL(blob),a=document.createElement("a");a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),4000);return true}
+  toast("التنزيل غير متاح في هذا العرض. اضغط مطولاً على المعاينة أو انقر بالزر الأيمن لحفظ الصورة.");return false}
+async function drawSheet(o){
+  try{await Promise.all(['400 24px "IBM Plex Sans Arabic"','600 24px "IBM Plex Sans Arabic"','600 24px "Readex Pro"','500 24px "IBM Plex Mono"'].map(f=>document.fonts.load(f)))}catch(e){}
+  const W=1240,H=1754,c=document.createElement("canvas");c.width=W;c.height=H;const x=c.getContext("2d");
+  const AR='"IBM Plex Sans Arabic",Tahoma,Arial,sans-serif',DS='"Readex Pro","IBM Plex Sans Arabic",Tahoma,sans-serif',MO='"IBM Plex Mono",Menlo,monospace';
+  const C={navy:"#001280",blue:"#005EB8",teal:"#00A5B3",yellow:"#F6B80F",red:"#D40E3E",ink:"#000000",muted:"#555b6e",line:"#dde1ec",soft:"#f5f6fa",navySoft:"#e3e7f7",pale:"#d6dcf5"};
+  const M=80,R=W-M,CW=W-2*M;
+  const txt=(s,xx,yy,font,color,align="right",dir="rtl")=>{x.font=font;x.fillStyle=color;x.textAlign=align;x.direction=dir;x.fillText(String(s??""),xx,yy)};
+  const box=(x0,y0,w,h,fill,stroke,r=14)=>{x.beginPath();if(x.roundRect)x.roundRect(x0,y0,w,h,r);else x.rect(x0,y0,w,h);if(fill){x.fillStyle=fill;x.fill()}if(stroke){x.strokeStyle=stroke;x.lineWidth=2;x.stroke()}};
+  const wrap=(s,font,maxW)=>{x.font=font;const out=[];let l="";for(const w of String(s||"").split(/\s+/)){const t=l?l+" "+w:w;if(x.measureText(t).width>maxW&&l){out.push(l);l=w}else l=t}if(l)out.push(l);return out};
+  const fit=(s,w,max,weight,fam)=>{let fs=max;x.font=`${weight} ${fs}px ${fam}`;while(x.measureText(s).width>w&&fs>16){fs-=2;x.font=`${weight} ${fs}px ${fam}`}return x.font};
+  const sec=(t,y)=>{x.fillStyle=C.teal;x.fillRect(R-8,y-26,8,32);txt(t,R-22,y,`600 30px ${DS}`,C.navy)};
+  const cl=clinic(o.clinic),pt=point(o.point),d=new Date(o.date+"T00:00");
+  const clHex=(getComputedStyle(document.documentElement).getPropertyValue(cl.c)||C.blue).trim()||C.blue;
+  x.fillStyle="#ffffff";x.fillRect(0,0,W,H);
+  x.fillStyle=C.navy;x.fillRect(0,0,W,230);x.fillStyle=C.teal;x.fillRect(0,230,W,10);
+  txt("بطاقة زيارة ميدانية",R,112,`600 58px ${DS}`,"#ffffff");
+  txt("عمليات Outreach · الصحة والتغذية",R,170,`400 28px ${AR}`,C.pale);
+  txt(o.code,M,112,`500 46px ${MO}`,"#ffffff","left","ltr");
+  const pill={Delayed:[C.yellow,"#000000"],OnHold:[C.red,"#ffffff"]}[o.status]||["#ffffff",C.navy];
+  x.font=`600 24px ${AR}`;const sw=x.measureText(ST[o.status]||o.status).width+48;box(M,142,sw,48,pill[0],null,24);txt(ST[o.status]||o.status,M+sw/2,175,`600 24px ${AR}`,pill[1],"center");
+  let y=320;sec("المكان والموعد",y);y+=30;
+  const half=(CW-24)/2;
+  const card=(xr,y0,w,h,label,val,sub,mark)=>{box(xr-w,y0,w,h,C.soft,C.line);if(mark){x.fillStyle=mark;x.fillRect(xr-w+24,y0+26,18,18)}txt(label,xr-24,y0+44,`400 22px ${AR}`,C.muted);x.font=fit(val,w-48,36,600,DS);txt(val,xr-24,y0+92,x.font,C.ink);let yy=y0+132;for(const ln of wrap(sub,`400 22px ${AR}`,w-48).slice(0,2)){txt(ln,xr-24,yy,`400 22px ${AR}`,C.muted);yy+=32}};
+  card(R,y,half,200,"العيادة",cl.ar,`${cl.area} · المدير: ${cl.mgr}`,clHex);
+  card(R-half-24,y,half,200,"مكان الزيارة",pt.ar,pt.addr||"");
+  if(pt.lat)txt(`${pt.lat.toFixed(4)}, ${pt.lon.toFixed(4)}`,R-half-24-half+24,y+44,`500 20px ${MO}`,C.muted,"left","ltr");
+  y+=224;const q=(CW-3*20)/4;
+  [[`التاريخ · ${fmtDay(d)}`,o.date,MO,500],["موعد الانطلاق",o.dep||"—",MO,500],["موعد العودة",o.ret||"—",MO,500],["نوع الخدمة",SV[o.service]||o.service,DS,600]].forEach(([l,v,fam,wt],i)=>{const xr=R-i*(q+20);box(xr-q,y,q,124,"#ffffff",C.line);txt(l,xr-22,y+44,`400 21px ${AR}`,C.muted);const f=fit(v,q-44,32,wt,fam);txt(v,xr-22,y+96,f,C.ink,"right",fam===MO?"ltr":"rtl")});
+  y+=190;const team=o.team||[];sec(`الفريق (${team.length})`,y);y+=30;
+  const fp=(cx,cy)=>{x.beginPath();x.arc(cx,cy,11,0,Math.PI*2);x.strokeStyle=C.teal;x.lineWidth=3;x.stroke();x.beginPath();x.arc(cx,cy,4.5,0,Math.PI*2);x.fillStyle=C.navy;x.fill()};
+  const rows=[...team.filter(t=>t.id===o.leader),...team.filter(t=>t.id!==o.leader)].slice(0,10);
+  if(rows.length){x.fillStyle=C.soft;x.fillRect(M,y,CW,52);txt("العضو",R-60,y+35,`600 21px ${AR}`,C.muted);txt("الدور",R-540,y+35,`600 21px ${AR}`,C.muted);txt("الهاتف",M+24,y+35,`600 21px ${AR}`,C.muted,"left");y+=52;
+    rows.forEach(t=>{if(t.id===o.leader)fp(R-32,y+34);txt(t.name,R-60,y+42,`600 25px ${AR}`,C.ink);txt(RL[t.role]||t.role,R-540,y+42,`400 24px ${AR}`,C.ink);txt(t.phone||"—",M+24,y+42,`500 23px ${MO}`,C.ink,"left","ltr");y+=62;x.fillStyle=C.line;x.fillRect(M,y-2,CW,2)});
+    if(team.some(t=>t.id===o.leader)){fp(R-32,y+30);txt("Focal Point",R-56,y+38,`500 22px ${AR}`,C.muted,"right","ltr");y+=50}}
+  if(!team.length){txt("لم يُحدَّد الفريق بعد.",R,y+32,`400 25px ${AR}`,C.muted);y+=50}
+  if(o.status==="Completed"&&o.report){y+=50;sec("نتائج الزيارة",y);y+=30;
+    [["المستفيدون",o.report.ben,C.soft,C.ink],["استشارات طبية",o.report.cons,C.soft,C.ink],["حالات MAM",o.report.mam,"#fdeab6",C.ink],["حالات SAM",o.report.sam,"#fbe1e8",C.red]].forEach(([l,v,bg,fg],i)=>{const xr=R-i*(q+20);box(xr-q,y,q,120,bg,null);txt(l,xr-22,y+42,`400 21px ${AR}`,C.muted);txt(N(v),xr-22,y+98,`600 40px ${DS}`,fg)});y+=140}
+  y+=50;sec("ملاحظات",y);y+=26;
+  const maxLines=Math.max(1,Math.floor((H-300-y-40)/40));
+  const nl=wrap(o.notes||"لا توجد ملاحظات.",`400 25px ${AR}`,CW-48).slice(0,Math.min(6,maxLines));
+  box(M,y,CW,nl.length*40+40,C.soft,null);nl.forEach((l,i)=>txt(l,R-24,y+50+i*40,`400 25px ${AR}`,o.notes?C.ink:C.muted));
+  const fy=H-210,sw2=(CW-60)/2;
+  [["Focal Point",R],["مدير العيادة",R-sw2-60]].forEach(([l,xr])=>{txt(l,xr,fy,`400 22px ${AR}`,C.muted);x.fillStyle=C.ink;x.fillRect(xr-sw2,fy+70,sw2,2)});
+  x.fillStyle=C.navy;x.fillRect(0,H-72,W,72);
+  txt(`أُعدّت في ${iso(new Date())} الساعة ${nowHM()} · عمليات Outreach`,R,H-27,`400 21px ${AR}`,C.pale);
+  txt(`${cl.en} → ${pt.en||""}`,M,H-27,`400 20px ${AR}`,C.pale,"left","ltr");
+  return c}
+async function showExport(op,saved){
+  const form=$("#opForm"),dlg=$("#opDlg");
+  form.onchange=null;form.oninput=null;form.onsubmit=e=>e.preventDefault();
+  form.innerHTML=`<div class="dlg-h"><div><h2>${saved?"حُفظت العملية":"بطاقة الزيارة"} <span class="mono">${esc(op.code)}</span></h2><span class="muted" style="font-size:12.5px">نسخة جاهزة للطباعة أو الإرسال للفريق عبر واتساب</span></div><button type="button" class="btn sm" data-x aria-label="إغلاق">✕</button></div>
+  <div class="exp"><div class="exp-prev" id="expPrev"><span class="muted">جارٍ تجهيز المعاينة…</span></div></div>
+  <div class="dlg-f"><button type="button" class="btn" data-x>إغلاق</button><div class="filters"><button type="button" class="btn" data-jpg disabled>تنزيل JPG</button><button type="button" class="btn primary" data-pdf disabled>تنزيل PDF</button></div></div>`;
+  form.onclick=e=>{if(e.target.closest("[data-x]"))dlg.close()};
+  if(!dlg.open)dlg.showModal();
+  const cv=await drawSheet(op);const url=cv.toDataURL("image/jpeg",0.92);
+  $("#expPrev").innerHTML=`<img src="${url}" alt="معاينة بطاقة الزيارة ${esc(op.code)}">`;
+  form.querySelectorAll("[data-jpg],[data-pdf]").forEach(b=>b.disabled=false);
+  const base=`${op.code}_${op.date}`;
+  form.onclick=async e=>{
+    if(e.target.closest("[data-x]")){dlg.close();return}
+    if(e.target.closest("[data-jpg]")){const b=await new Promise(r=>cv.toBlob(r,"image/jpeg",0.92));saveFile(base+".jpg",b)}
+    const pb=e.target.closest("[data-pdf]");
+    if(pb){pb.disabled=true;pb.textContent="جارٍ التجهيز…";
+      try{const {jsPDF}=await loadJsPDF();const pdf=new jsPDF({orientation:"p",unit:"mm",format:"a4"});pdf.addImage(url,"JPEG",0,0,210,297);await saveFile(base+".pdf",pdf.output("blob"))}catch(err){toast("تعذّر تجهيز PDF الآن. نزّل نسخة JPG بدلاً منها.")}
+      pb.disabled=false;pb.textContent="تنزيل PDF"}};
+}
+
+/* ---------- csv ---------- */
+async function exportCSV(name,rows){
+  const csv="﻿"+rows.map(r=>r.map(v=>{v=String(v??"");return /[",\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v}).join(",")).join("\n");
+  let dl=null;try{dl=window.claude&&await window.claude.use("downloads")}catch(e){}
+  if(dl){try{await dl.save({filename:name,data:csv});return}catch(e){if(e&&e.code==="declined")return}}
+  if(!window.claude){await saveFile(name,new Blob([csv],{type:"text/csv;charset=utf-8"}));return}
+  try{await navigator.clipboard.writeText(csv);toast("نُسخ الجدول كـCSV. الصقه في Excel أو Google Sheets.")}catch(e){toast("تعذّر التصدير من هذا العرض.")}}
+const opsRows=()=>[["الكود","التاريخ","العيادة","النقطة","الخدمة","الحالة","الانطلاق","العودة","الفريق","المستفيدون","استشارات","MAM","SAM","ملاحظات"],...sortOps(S.ops).map(o=>[o.code,o.date,clinic(o.clinic).ar,point(o.point).ar,SV[o.service]||o.service,ST[o.status],o.dep,o.ret,(o.team||[]).map(t=>t.name).join(" / "),rep(o).ben??"",rep(o).cons??"",rep(o).mam??"",rep(o).sam??"",o.notes])];
+
+/* ---------- events ---------- */
+document.addEventListener("click",async e=>{
+  if(e.target.closest("#opDlg"))return;
+  const a=e.target.closest("[data-act]");
+  if(a){const act=a.dataset.act;
+    if(act==="new-op")openOp(null,{date:a.dataset.date,clinic:a.dataset.clinic});
+    if(act==="reset"){Object.assign(S.f,{clinic:"",status:"",service:"",range:"today",q:""});render()}
+    if(act==="wk"){S.f.weekOffset=a.dataset.d==="0"?0:S.f.weekOffset+Number(a.dataset.d);render()}
+    if(act==="backup"){const data=JSON.stringify({app:"outreach-ops",exportedAt:new Date().toISOString(),ops:S.ops,staff:S.staff},null,2);saveFile(`outreach-backup_${todayISO()}.json`,new Blob([data],{type:"application/json"}))}
+    if(act==="csv-ops")exportCSV("outreach-operations.csv",opsRows());
+    if(act==="csv-rep")exportCSV("outreach-visit-reports.csv",opsRows().filter((r,i)=>i===0||r[5]===ST.Completed));
+    if(act==="edit-staff"){S.editStaff=a.dataset.id;render();$("#sf-name")?.focus()}
+    if(act==="cancel-staff"){S.editStaff=null;render()}
+    if(act==="ask-del"){S.confirmDel=a.dataset.id;render()}
+    if(act==="del-staff"){S.confirmDel=null;if(await del("staff",a.dataset.id))toast("حُذف الكادر")}
+    return}
+  if(e.target.closest("[data-stop]"))return;
+  const r=e.target.closest("[data-open]");if(r){const o=S.ops.find(x=>x.id===r.dataset.open);if(o)openOp(o)}
+});
+document.addEventListener("change",async e=>{
+  const t=e.target;if(t.closest("#opDlg"))return;
+  if(t.id==="restoreFile"&&t.files&&t.files[0]){try{const d=JSON.parse(await t.files[0].text());let n=0;
+      for(const col of ["ops","staff"])for(const r of (d[col]||[])){if(!r||!r.id)continue;const {id,...b}=r;await put(col,id,b);n++}
+      toast(`استُعيد ${n} سجل من النسخة الاحتياطية`)}catch(err){toast("الملف غير صالح. اختر ملف نسخة احتياطية بصيغة JSON من هذا النظام.")}t.value="";return}
+  if(t.dataset.f){S.f[t.dataset.f]=t.value;render();return}
+  if(t.dataset.status){const o=S.ops.find(x=>x.id===t.dataset.status);if(!o)return;
+    if(t.value==="Completed"){const copy={...o,status:"Completed"};t.value=o.status;openOp(copy);return}
+    const {id,...body}=o;await put("ops",id,{...body,status:t.value,updatedAt:new Date().toISOString()});toast(`${o.code}: ${ST[t.value]}`)}
+});
+document.addEventListener("input",e=>{if(e.target.id==="q"){S.f.q=e.target.value;clearTimeout(render.t);render.t=setTimeout(render,180)}});
+document.addEventListener("submit",async e=>{
+  if(e.target.id!=="staffForm")return;e.preventDefault();
+  const name=$("#sf-name").value.trim();if(!name)return;
+  const id=S.editStaff||newId("st");
+  if(await put("staff",id,{name,role:$("#sf-role").value,clinic:$("#sf-clinic").value,phone:$("#sf-phone").value.trim()})){toast(S.editStaff?"حُفظ "+name:"أُضيف "+name);S.editStaff=null;render();$("#sf-name")?.focus()}
+});
+addEventListener("hashchange",()=>{window.scrollTo(0,0);render()});
+setInterval(()=>{if(cur()==="overview"&&!document.querySelector("dialog[open]")&&document.activeElement?.id!=="q")render()},60000);
+render();boot();
+</script>
+
+</body>
+</html>
