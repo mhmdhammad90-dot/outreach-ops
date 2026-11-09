@@ -211,6 +211,19 @@ dialog::backdrop{background:rgba(10,20,20,.45)}
 .inline-add input,.inline-add select{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:6px 8px;min-width:0;font-size:13px}
 .report{grid-column:1/-1;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;background:var(--ok-soft);border-radius:10px;padding:12px}
 .report .ttl{grid-column:1/-1;font-family:var(--f-display);color:var(--ok);font-size:14px}
+.adminbtn{background:transparent;border:1px solid rgba(255,255,255,.25);color:inherit;border-radius:8px;padding:7px 10px;cursor:pointer;font:inherit;font-size:12.5px;text-align:right;margin-top:auto}
+.adminbtn:hover{background:rgba(255,255,255,.06)}
+.adminbtn:focus-visible{outline:2px solid var(--rail-mark);outline-offset:1px}
+.adminbtn+.live{margin-top:0}
+.nav a.nav-admin{margin-top:8px;border:1px dashed rgba(255,255,255,.3)}
+.coords{font-size:12px;color:var(--muted)}
+.coords a,td a{color:var(--accent)}
+.coordbox{display:grid;grid-template-columns:1fr 1fr;gap:10px;background:var(--sunk);border-radius:10px;padding:12px}
+.coordbox .ttl{grid-column:1/-1;font-family:var(--f-display);color:var(--accent)}
+.coordbox .full{grid-column:1/-1}
+.labels{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}
+.labels .full{grid-column:1/-1}
+.labels textarea{resize:vertical}
 .toast{position:fixed;bottom:calc(16px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:9px 16px;border-radius:8px;font-size:13px;z-index:50;max-width:calc(100vw - 32px)}
 .muted{color:var(--muted)}
 .section-head{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;justify-content:space-between}
@@ -219,6 +232,7 @@ dialog::backdrop{background:rgba(10,20,20,.45)}
 /* responsive */
 @media (max-width:980px){.grid2{grid-template-columns:1fr}}
 @media (max-width:820px){
+  .adminbtn{margin-top:0;white-space:nowrap}
   .app{grid-template-columns:1fr}
   .rail{position:sticky;top:env(safe-area-inset-top,0px);height:auto;z-index:5;padding-block:10px;flex-direction:row;align-items:center;gap:12px;overflow-x:auto;padding-left:max(12px,env(safe-area-inset-left,0px));padding-right:max(12px,env(safe-area-inset-right,0px))}
   body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--rail)}
@@ -245,9 +259,10 @@ dialog::backdrop{background:rgba(10,20,20,.45)}
   <aside class="rail">
     <div class="brand">
       <svg width="34" height="34" viewBox="0 0 34 34" aria-hidden="true"><rect width="34" height="34" rx="9" fill="#005EB8"/><circle cx="17" cy="17" r="3.2" fill="#ffffff"/><path d="M10.5 10.5a9.2 9.2 0 0 0 0 13M23.5 10.5a9.2 9.2 0 0 1 0 13M7 7a14 14 0 0 0 0 20M27 7a14 14 0 0 1 0 20" stroke="#ffffff" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg>
-      <div><b>عمليات Outreach</b><small>متابعة الزيارات الميدانية</small></div>
+      <div><b id="brandName">عمليات Outreach</b><small id="brandSub">متابعة الزيارات الميدانية</small></div>
     </div>
     <nav class="nav" id="nav"></nav>
+    <button class="adminbtn" id="adminBtn" data-act="admin-toggle">دخول المشرف</button>
     <div class="live"><span class="dot" id="liveDot"></span><span id="liveTxt">جارٍ الاتصال بالبيانات…</span></div>
   </aside>
   <main><div class="wrap" id="view"></div></main>
@@ -258,7 +273,7 @@ dialog::backdrop{background:rgba(10,20,20,.45)}
 
 <script>
 /* ---------- reference data (organisation config) ---------- */
-const CLINICS=[
+const DEF_CLINICS=[
  {id:"CLN-001",ar:"عيادة عايدية",en:"Aaydia Clinic",area:"شمال غرب غزة - الشاطئ",mgr:"د. أحمد عابد",c:"--c1",frame:"أزرق"},
  {id:"CLN-002",ar:"عيادة الطيارة",en:"Al Tayara Clinic",area:"الوسطى - دير البلح",mgr:"د. تهاني سمرة",c:"--c2",frame:"أحمر"},
  {id:"CLN-003",ar:"عيادة التوبة",en:"Al Tawba Clinic",area:"الوسطى - دير البلح",mgr:"د. محمد عيد",c:"--c3",frame:"أخضر"},
@@ -268,7 +283,7 @@ const CLINICS=[
  {id:"CLN-007",ar:"عيادة الحساينة",en:"Al-Hasayna Clinic",area:"الوسطى - غرب النصيرات",mgr:"د. شرف الدين الصرفندي",c:"--c7",frame:"تركوازي"}];
 const PT_TYPES={Camp:"مخيم نزوح",Shelter:"مركز إيواء",Community:"منطقة مجتمعية",Distribution:"نقطة توزيع",Mobile:"نقطة عيادة متنقلة"};
 const P=(id,ar,en,addr,cl,type,visits,lat,lon)=>({id:"LOC-"+String(id).padStart(3,"0"),ar,en,addr,clinic:"CLN-00"+cl,type,visits,lat,lon});
-const POINTS=[
+const DEF_POINTS=[
  P(1,"مخيم الكرامة","AL Karama Camp","غرب غزة - الشاطئ - بالقرب من مخازن الغذاء العالمي",1,"Camp",16,31.5319,34.4405),
  P(2,"مخيم الجزيرة","Al Jazeera Camp","ميناء أبو حصيرة – فندق الجزيرة",1,"Camp",12,31.5299,34.4388),
  P(3,"مخيم شراب","Sharab Camp","أرض شراب – خلف مستشفى الأقصى",2,"Camp",14,31.4206,34.3599),
@@ -303,11 +318,12 @@ const SV=Object.fromEntries(SERVICES);
 const ROLES=[["Doctor","طبيب"],["Nurse","ممرض/ة"],["Midwife","قابلة قانونية"],["Nutrition Officer","أخصائي تغذية"],["CHNP","CHNP"],["Team Leader","قائد فريق"],["Data Collector","مدخل بيانات"],["Support Staff","دعم لوجستي"]];
 const RL=Object.fromEntries(ROLES);
 const DAYS=["الأحد","الإثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"];
+let CLINICS=DEF_CLINICS,POINTS=DEF_POINTS;
 const clinic=id=>CLINICS.find(c=>c.id===id)||{ar:"—",c:"--muted"};
 const point=id=>POINTS.find(p=>p.id===id)||{ar:"—"};
 
 /* ---------- state ---------- */
-const S={ops:[],staff:[],ready:{ops:false,staff:false},mode:"loading",readOnly:false,
+const S={ops:[],staff:[],ready:{ops:false,staff:false},mode:"loading",readOnly:false,admin:false,config:{labels:{},clinics:[],points:[],adminHash:null},
   f:{clinic:"",status:"",service:"",range:"today",q:"",ptType:"",ptClinic:"",stClinic:"",stRole:"",weekOffset:0,weekClinic:""},editStaff:null};
 let db=null;
 const $=s=>document.querySelector(s);
@@ -343,8 +359,10 @@ async function boot(){
   let api=null;
   try{if(window.claude&&window.claude.use)api=await window.claude.use("db")}catch(e){}
   if(!api){S.mode="local";loadLocal();
-    let fresh=true;try{fresh=!localStorage.getItem(LS)}catch(e){}
-    if(fresh&&!S.ops.length&&!S.staff.length){try{const r=await fetch("data.json",{cache:"no-store"});if(r.ok){const d=await r.json();S.ops=d.ops||[];S.staff=d.staff||[];saveLocal()}}catch(e){}}
+    let fresh=true,cfg=null;try{fresh=!localStorage.getItem(LS);cfg=JSON.parse(localStorage.getItem(LSC)||"null")}catch(e){}
+    if((fresh&&!S.ops.length&&!S.staff.length)||!cfg){try{const r=await fetch("data.json",{cache:"no-store"});if(r.ok){const d=await r.json();if(fresh&&!S.ops.length&&!S.staff.length){S.ops=d.ops||[];S.staff=d.staff||[];saveLocal()}if(!cfg&&d.config){cfg=d.config;try{localStorage.setItem(LSC,JSON.stringify(cfg))}catch(e){}}}}catch(e){}}
+    S.config=normalizeConfig(cfg);applyConfig();
+    try{const h=sessionStorage.getItem("outreach-admin");if(h&&h===S.config.adminHash)S.admin=true}catch(e){}
     S.ready.ops=S.ready.staff=true;setLive();render();return}
   db=api;S.mode="live";setLive();
   try{const u=await window.claude.use("user");if(u){const w=await u.can("data.write");if(w===false)S.readOnly=true}}catch(e){}
@@ -356,10 +374,123 @@ async function boot(){
       render()},
     e=>{clearTimeout(timer);S.mode="error";S.ready[col]=true;setLive();render()});
   sub("ops");sub("staff");
+  db.doc("settings/config").onSnapshot(d=>{S.config=normalizeConfig(d.exists?d.data():null);applyConfig();render()},()=>{});
+  try{const u=await window.claude.use("user");if(u&&await u.canEdit()){S.admin=true;render()}}catch(e){}
 }
 function setLive(){
   const m={loading:["جارٍ الاتصال بالبيانات…",1],live:["البيانات متزامنة مباشرة مع الفريق",1],stale:["تعذّر الوصول للبيانات بعد، قد تكون غير محدّثة",0],error:["انقطع الاتصال بالبيانات المشتركة",0],local:["البيانات محفوظة على هذا المتصفح",1]}[S.mode];
   $("#liveTxt").textContent=m[0];$("#liveDot").className="dot"+(m[1]?"":" off")}
+
+
+/* ---------- site config (editable by admin) ---------- */
+const LSC="outreach-config-v1";
+const LABELS=[
+ ["siteName","اسم الموقع","عمليات Outreach"],["siteSub","السطر تحت الاسم","متابعة الزيارات الميدانية"],
+ ["overview.t","عنوان: نظرة عامة","نظرة عامة"],["overview.s","وصف: نظرة عامة","متابعة زيارات فرق الصحة والتغذية إلى المخيمات ومراكز الإيواء."],
+ ["ops.t","عنوان: العمليات","سجل عمليات Outreach"],["ops.s","وصف: العمليات","كل العمليات المجدولة والمنفذة. اضغط على أي صف لتعديله أو إغلاقه بتقرير زيارة."],
+ ["week.t","عنوان: الخطة الأسبوعية","الخطة الأسبوعية"],
+ ["clinics.t","عنوان: العيادات","العيادات"],["clinics.s","وصف: العيادات","العيادات التي تخرج منها الفرق، مع الكوادر والمخيمات التابعة لكل عيادة."],
+ ["points.t","عنوان: النقاط","نقاط Outreach والمخيمات"],["points.s","وصف: النقاط","مخيمات النزوح ومراكز الإيواء المستهدفة بخدمات الصحة والتغذية."],
+ ["staff.t","عنوان: الكوادر","الكوادر"],["staff.s","وصف: الكوادر","أضف الكوادر وحدّد عيادة كل منهم ليظهروا عند اختيار فريق أي عملية."],
+ ["reports.t","عنوان: التقارير","التقارير"],["reports.s","وصف: التقارير","نتائج الزيارات: الاستشارات الطبية، فحوصات MUAC، وحالات سوء التغذية."],
+ ["nav.overview","القائمة: نظرة عامة","نظرة عامة"],["nav.ops","القائمة: العمليات","العمليات"],["nav.week","القائمة: الخطة الأسبوعية","الخطة الأسبوعية"],["nav.clinics","القائمة: العيادات","العيادات"],["nav.points","القائمة: النقاط","النقاط والمخيمات"],["nav.staff","القائمة: الكوادر","الكوادر الميدانية"],["nav.reports","القائمة: التقارير","التقارير"]];
+const LDEF=Object.fromEntries(LABELS.map(([k,,d])=>[k,d]));
+const T=k=>{const v=(S.config.labels||{})[k];return v!=null&&String(v).trim()!==""?v:LDEF[k]};
+function normalizeConfig(c){c=c||{};return {labels:c.labels||{},clinics:Array.isArray(c.clinics)&&c.clinics.length?c.clinics:DEF_CLINICS,points:Array.isArray(c.points)?c.points:DEF_POINTS,adminHash:c.adminHash||null}}
+function applyConfig(){CLINICS=S.config.clinics;POINTS=S.config.points;document.title=T("siteName");const b=$("#brandName"),s=$("#brandSub");if(b)b.textContent=T("siteName");if(s)s.textContent=T("siteSub")}
+async function saveConfig(next){
+  const cfg=normalizeConfig({...S.config,...next});
+  if(db){try{await db.doc("settings/config").set(JSON.parse(JSON.stringify({labels:cfg.labels,clinics:cfg.clinics,points:cfg.points})))}catch(e){toast(e&&e.code==="invalid_argument"?"تعديل الإعدادات متاح للمشرف فقط.":errMsg(e));return false}}
+  S.config=cfg;applyConfig();if(!db){try{localStorage.setItem(LSC,JSON.stringify(cfg))}catch(e){}}render();return true}
+const cv=c=>!c?"var(--muted)":String(c).startsWith("--")?`var(${c})`:c;
+const hexOf=c=>String(c||"").startsWith("--")?(getComputedStyle(document.documentElement).getPropertyValue(c).trim()||"#005EB8"):(c||"#005EB8");
+const mapsUrl=(lat,lon)=>`https://www.google.com/maps?q=${lat},${lon}`;
+function parseCoords(s){s=String(s||"").trim();let m=s.match(/@(-?\d+(?:\.\d+)?),\s*(-?\d+(?:\.\d+)?)/)||s.match(/[?&](?:q|query|ll)=(-?\d+(?:\.\d+)?),\s*(-?\d+(?:\.\d+)?)/)||s.match(/(-?\d{1,2}\.\d+)\s*[,،\s]\s*(-?\d{1,3}\.\d+)/);return m?{lat:+m[1],lon:+m[2]}:null}
+
+/* ---------- admin session ---------- */
+async function sha(s){const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode("outreach:"+s));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("")}
+function adminLogin(){
+  const dlg=$("#opDlg"),form=$("#opForm");form.onchange=form.oninput=null;
+  const setup=!S.config.adminHash;
+  form.innerHTML=`<div class="dlg-h"><div><h2>${setup?"إنشاء حساب المشرف":"دخول المشرف"}</h2><span class="muted" style="font-size:12.5px">${setup?"اختر كلمة مرور لصلاحيات الإضافة والتعديل والحذف":"أدخل كلمة مرور المشرف"}</span></div><button type="button" class="btn sm" data-x aria-label="إغلاق">✕</button></div>
+  <div class="dlg-b"><div class="field full"><label for="ad-pass">كلمة المرور</label><input id="ad-pass" type="password" autocomplete="${setup?"new-password":"current-password"}" required minlength="6"></div>
+  ${setup?`<div class="field full"><label for="ad-pass2">تأكيد كلمة المرور</label><input id="ad-pass2" type="password" autocomplete="new-password" required minlength="6"></div><p class="full muted" style="margin:0;font-size:12.5px">تُحفظ كلمة المرور مشفّرة في إعدادات هذا المتصفح، وتنتقل مع النسخة الاحتياطية.</p>`:""}
+  <p class="full" id="ad-err" style="margin:0;color:var(--bad);font-size:13px" hidden></p></div>
+  <div class="dlg-f"><span></span><div class="filters"><button type="button" class="btn" data-x>إلغاء</button><button type="submit" class="btn primary">${setup?"إنشاء والدخول":"دخول"}</button></div></div>`;
+  form.onclick=e=>{if(e.target.closest("[data-x]"))dlg.close()};
+  form.onsubmit=async e=>{e.preventDefault();const p=$("#ad-pass").value,err=$("#ad-err");
+    if(p.length<6){err.textContent="كلمة المرور يجب أن تكون 6 أحرف على الأقل.";err.hidden=false;return}
+    if(setup){if(p!==$("#ad-pass2").value){err.textContent="كلمتا المرور غير متطابقتين.";err.hidden=false;return}const h=await sha(p);await saveConfig({adminHash:h});enterAdmin(h)}
+    else{const h=await sha(p);if(h!==S.config.adminHash){err.textContent="كلمة المرور غير صحيحة.";err.hidden=false;return}enterAdmin(h)}
+    dlg.close()};
+  dlg.showModal();setTimeout(()=>$("#ad-pass")?.focus(),50)}
+function enterAdmin(h){S.admin=true;try{sessionStorage.setItem("outreach-admin",h)}catch(e){}toast("أنت الآن في وضع المشرف");location.hash="admin";render()}
+function exitAdmin(){S.admin=false;try{sessionStorage.removeItem("outreach-admin")}catch(e){}if(cur()==="admin")location.hash="overview";render();toast("خرجت من وضع المشرف")}
+
+/* ---------- admin view ---------- */
+function vAdmin(){
+  if(!S.admin)return `<div class="empty"><b>هذه الصفحة للمشرف فقط</b><button class="btn primary" data-act="admin-login" style="margin-top:10px">دخول المشرف</button></div>`;
+  const cnt=id=>POINTS.filter(p=>p.clinic===id).length;
+  return `<div class="section-head"><div><h1>لوحة المشرف</h1><p>أضف أو عدّل أو احذف العيادات والنقاط وإحداثياتها، وغيّر عناوين الموقع ونصوصه.</p></div>
+    <div class="filters">${S.mode==="local"?`<button class="btn" data-act="admin-pass">تغيير كلمة المرور</button>`:""}${S.mode==="local"?`<button class="btn" data-act="admin-out">خروج من وضع المشرف</button>`:""}</div></div>
+  <section class="panel"><div class="panel-h"><div><h2>العيادات (${CLINICS.length})</h2><p>حذف العيادة متاح بعد نقل نقاطها لعيادة أخرى</p></div><button class="btn primary sm" data-act="ent-new" data-kind="clinic">+ إضافة عيادة</button></div>
+    <div class="tbl-wrap"><table><thead><tr><th>العيادة</th><th>المنطقة</th><th>المدير</th><th>الهاتف</th><th>النقاط</th><th></th></tr></thead><tbody>
+    ${CLINICS.map(c=>`<tr><td><span class="clin" style="--cc:${cv(c.c)}"><b>${esc(c.ar)}</b></span><span class="sub" dir="ltr" style="text-align:right">${esc(c.en||"")}</span></td><td>${esc(c.area||"")}</td><td>${esc(c.mgr||"")}</td><td class="mono">${esc(c.phone||"—")}</td><td class="num">${cnt(c.id)}</td>
+    <td><div class="filters" style="flex-wrap:nowrap"><button class="btn sm" data-act="ent-edit" data-kind="clinic" data-id="${esc(c.id)}">تعديل</button>${delBtn("clinic",c.id)}</div></td></tr>`).join("")}
+    </tbody></table></div></section>
+  <section class="panel"><div class="panel-h"><div><h2>النقاط والمخيمات (${POINTS.length})</h2><p>لكل نقطة إحداثيات يمكن فتحها مباشرة في خرائط Google</p></div><button class="btn primary sm" data-act="ent-new" data-kind="point">+ إضافة نقطة</button></div>
+    <div class="tbl-wrap"><table><thead><tr><th>النقطة</th><th>العيادة</th><th>النوع</th><th>الإحداثيات</th><th></th></tr></thead><tbody>
+    ${POINTS.map(p=>`<tr><td><b>${esc(p.ar)}</b><span class="sub">${esc(p.addr||"")}</span></td><td>${clin(p.clinic)}</td><td>${esc(PT_TYPES[p.type]||p.type)}</td>
+    <td>${p.lat!=null&&p.lon!=null&&p.lat!==""?`<a class="mono" href="${mapsUrl(p.lat,p.lon)}" target="_blank" rel="noopener">${(+p.lat).toFixed(5)}, ${(+p.lon).toFixed(5)}</a>`:'<span class="muted">بدون إحداثيات</span>'}</td>
+    <td><div class="filters" style="flex-wrap:nowrap"><button class="btn sm" data-act="ent-edit" data-kind="point" data-id="${esc(p.id)}">تعديل</button>${delBtn("point",p.id)}</div></td></tr>`).join("")}
+    </tbody></table></div></section>
+  <section class="panel"><div class="panel-h"><div><h2>العناوين والنصوص</h2><p>اترك الحقل فارغاً ليعود للنص الافتراضي</p></div></div>
+    <form class="panel-b labels" id="labelsForm">${LABELS.map(([k,l,d])=>`<div class="field"><label for="lb-${k.replace(".","-")}">${esc(l)}</label>${d.length>40?`<textarea id="lb-${k.replace(".","-")}" data-lb="${k}" rows="2" placeholder="${esc(d)}">${esc((S.config.labels||{})[k]||"")}</textarea>`:`<input id="lb-${k.replace(".","-")}" data-lb="${k}" placeholder="${esc(d)}" value="${esc((S.config.labels||{})[k]||"")}">`}</div>`).join("")}
+    <div class="full filters"><button class="btn primary">حفظ العناوين</button></div></form></section>`}
+const delBtn=(kind,id)=>S.confirmEnt===kind+":"+id?`<button class="btn sm danger" data-act="ent-del" data-kind="${kind}" data-id="${esc(id)}">تأكيد الحذف</button>`:`<button class="btn sm danger" data-act="ent-ask" data-kind="${kind}" data-id="${esc(id)}">حذف</button>`;
+
+function editEntity(kind,id){
+  const dlg=$("#opDlg"),form=$("#opForm");form.onchange=form.oninput=null;
+  const isNew=!id,list=kind==="clinic"?CLINICS:POINTS;
+  const r=isNew?(kind==="clinic"?{id:"CLN-"+Date.now().toString(36).toUpperCase(),ar:"",en:"",area:"",mgr:"",phone:"",frame:"",c:"#005EB8"}:{id:"LOC-"+Date.now().toString(36).toUpperCase(),ar:"",en:"",addr:"",clinic:CLINICS[0]?.id||"",type:"Camp",visits:0,lat:"",lon:""}):{...list.find(x=>x.id===id)};
+  const f=(k,l,v,attrs="")=>`<div class="field"><label for="e-${k}">${l}</label><input id="e-${k}" value="${esc(v??"")}" ${attrs}></div>`;
+  const body=kind==="clinic"?`${f("ar","اسم العيادة *",r.ar,"required")}${f("en","الاسم بالإنجليزية",r.en,'dir="ltr"')}${f("area","المنطقة",r.area)}${f("mgr","مدير العيادة",r.mgr)}${f("phone","هاتف الاتصال",r.phone,'type="tel" dir="ltr"')}${f("frame","لون الإطار (اسم)",r.frame,'placeholder="مثال: أزرق"')}
+     <div class="field"><label for="e-c">لون العيادة على الموقع</label><input id="e-c" type="color" value="${esc(hexOf(r.c))}" style="height:38px;padding:3px"></div>`
+   :`${f("ar","اسم النقطة *",r.ar,"required")}${f("en","الاسم بالإنجليزية",r.en,'dir="ltr"')}
+     <div class="field full"><label for="e-addr">العنوان</label><input id="e-addr" value="${esc(r.addr||"")}"></div>
+     <div class="field"><label for="e-clinic">العيادة المشرفة</label><select id="e-clinic">${clinicOpts(r.clinic)}</select></div>
+     <div class="field"><label for="e-type">نوع الموقع</label><select id="e-type">${opts(Object.entries(PT_TYPES),r.type)}</select></div>
+     <div class="coordbox full"><div class="ttl">الإحداثيات</div>
+       ${f("lat","خط العرض (Latitude)",r.lat,'dir="ltr" inputmode="decimal" placeholder="31.4190"')}${f("lon","خط الطول (Longitude)",r.lon,'dir="ltr" inputmode="decimal" placeholder="34.3313"')}
+       <div class="field full"><label for="e-paste">أو الصق رابط خرائط Google أو الإحداثيات معاً</label><input id="e-paste" dir="ltr" placeholder="https://maps.google.com/...@31.419,34.331  أو  31.419, 34.331"></div>
+       <div class="full filters"><button type="button" class="btn sm" data-geo>استخدام موقعي الحالي</button><a id="e-map" class="linkbtn" target="_blank" rel="noopener" ${r.lat!==""&&r.lat!=null?`href="${mapsUrl(r.lat,r.lon)}"`:"hidden"}>فتح في خرائط Google ←</a></div></div>
+     ${f("visits","زيارات سابقة (قبل النظام)",r.visits,'type="number" min="0"')}`;
+  form.innerHTML=`<div class="dlg-h"><div><h2>${isNew?(kind==="clinic"?"إضافة عيادة":"إضافة نقطة"):"تعديل "+esc(r.ar)}</h2><span class="muted mono" style="font-size:12px">${esc(r.id)}</span></div><button type="button" class="btn sm" data-x aria-label="إغلاق">✕</button></div>
+  <div class="dlg-b">${body}</div>
+  <div class="dlg-f"><span></span><div class="filters"><button type="button" class="btn" data-x>إلغاء</button><button type="submit" class="btn primary">${isNew?"إضافة":"حفظ"}</button></div></div>`;
+  const syncMap=()=>{const a=$("#e-map");if(!a)return;const la=parseFloat($("#e-lat").value),lo=parseFloat($("#e-lon").value);if(isFinite(la)&&isFinite(lo)){a.href=mapsUrl(la,lo);a.hidden=false}else a.hidden=true};
+  form.oninput=e=>{if(e.target.id==="e-paste"){const c=parseCoords(e.target.value);if(c){$("#e-lat").value=c.lat;$("#e-lon").value=c.lon;syncMap()}}if(e.target.id==="e-lat"||e.target.id==="e-lon")syncMap()};
+  form.onclick=e=>{if(e.target.closest("[data-x]")){dlg.close();return}
+    if(e.target.closest("[data-geo]")){if(!navigator.geolocation){toast("المتصفح لا يدعم تحديد الموقع.");return}
+      toast("جارٍ تحديد موقعك…");navigator.geolocation.getCurrentPosition(p=>{$("#e-lat").value=p.coords.latitude.toFixed(6);$("#e-lon").value=p.coords.longitude.toFixed(6);syncMap();toast("تم إدخال موقعك الحالي")},()=>toast("تعذّر تحديد الموقع. اسمح للمتصفح بالوصول للموقع أو أدخل الإحداثيات يدوياً."),{enableHighAccuracy:true,timeout:15000})}};
+  form.onsubmit=async e=>{e.preventDefault();const g=k=>($("#e-"+k)?.value??"").trim();
+    if(!g("ar")){$("#e-ar").focus();return}
+    let rec;
+    if(kind==="clinic")rec={...r,ar:g("ar"),en:g("en"),area:g("area"),mgr:g("mgr"),phone:g("phone"),frame:g("frame"),c:g("c")||"#005EB8"};
+    else{const la=g("lat"),lo=g("lon");const lat=la===""?"":parseFloat(la),lon=lo===""?"":parseFloat(lo);
+      if((la!==""&&!(lat>=-90&&lat<=90))||(lo!==""&&!(lon>=-180&&lon<=180))){toast("الإحداثيات غير صحيحة. خط العرض بين -90 و90، وخط الطول بين -180 و180.");return}
+      if((la==="")!==(lo==="")){toast("أدخل خط العرض وخط الطول معاً.");return}
+      rec={...r,ar:g("ar"),en:g("en"),addr:g("addr"),clinic:g("clinic"),type:g("type"),visits:Math.max(0,parseInt(g("visits"),10)||0),lat,lon};
+      if(lat!==""&&!(lat>31.2&&lat<31.65&&lon>34.15&&lon<34.6))toast("تنبيه: الإحداثيات خارج قطاع غزة، تأكد منها.")}
+    const arr=list.slice();const i=arr.findIndex(x=>x.id===rec.id);if(i>=0)arr[i]=rec;else arr.push(rec);
+    if(await saveConfig(kind==="clinic"?{clinics:arr}:{points:arr})){dlg.close();toast(isNew?"أُضيفت "+rec.ar:"حُفظت "+rec.ar)}};
+  dlg.showModal()}
+async function deleteEntity(kind,id){
+  S.confirmEnt=null;
+  if(kind==="clinic"){if(POINTS.some(p=>p.clinic===id)){toast("انقل نقاط هذه العيادة لعيادة أخرى أولاً، ثم احذفها.");render();return}
+    if(CLINICS.length<=1){toast("يجب أن تبقى عيادة واحدة على الأقل.");render();return}
+    if(await saveConfig({clinics:CLINICS.filter(c=>c.id!==id)}))toast("حُذفت العيادة")}
+  else{const used=S.ops.filter(o=>o.point===id).length;if(await saveConfig({points:POINTS.filter(p=>p.id!==id)}))toast(used?`حُذفت النقطة. ${used} عملية سابقة ستظهر بدون اسم مكان.`:"حُذفت النقطة")}}
 
 /* ---------- derived ---------- */
 function inRange(o,r){if(r==="all")return true;if(r==="today")return o.date===todayISO();const w=weekDates(0);return o.date>=iso(w[0])&&o.date<=iso(w[6])}
@@ -370,22 +501,23 @@ const rep=o=>o.report||{};
 
 /* ---------- views ---------- */
 const VIEWS=[["overview","نظرة عامة"],["ops","العمليات"],["week","الخطة الأسبوعية"],["clinics","العيادات"],["points","النقاط والمخيمات"],["staff","الكوادر الميدانية"],["reports","التقارير"]];
-const cur=()=>{const h=location.hash.slice(1);return VIEWS.some(v=>v[0]===h)?h:"overview"};
+const cur=()=>{const h=location.hash.slice(1);return h==="admin"||VIEWS.some(v=>v[0]===h)?h:"overview"};
 function renderNav(){
   const counts={ops:S.ops.length,clinics:CLINICS.length,points:POINTS.length,staff:S.staff.length};
-  $("#nav").innerHTML=VIEWS.map(([k,l])=>`<a href="#${k}" ${cur()===k?'aria-current="page"':""}><span>${l}</span>${counts[k]!=null?`<span class="count">${counts[k]}</span>`:""}</a>`).join("")}
+  $("#nav").innerHTML=VIEWS.map(([k,l])=>`<a href="#${k}" ${cur()===k?'aria-current="page"':""}><span>${esc(T("nav."+k))}</span>${counts[k]!=null?`<span class="count">${counts[k]}</span>`:""}</a>`).join("")+(S.admin?`<a href="#admin" class="nav-admin" ${cur()==="admin"?'aria-current="page"':""}><span>لوحة المشرف</span></a>`:"");
+  const ab=$("#adminBtn");if(ab){ab.hidden=S.mode!=="local"&&!S.admin;ab.textContent=S.admin?(S.mode==="local"?"خروج من وضع المشرف":"وضع المشرف مفعّل"):"دخول المشرف"}}
 
 function opts(list,sel,all){return (all?`<option value="">${all}</option>`:"")+list.map(([v,l])=>`<option value="${esc(v)}" ${v===sel?"selected":""}>${esc(l)}</option>`).join("")}
 const clinicOpts=(sel,all)=>opts(CLINICS.map(c=>[c.id,c.ar]),sel,all);
 const chip=s=>`<span class="chip s-${s}"><i></i>${ST[s]||s}</span>`;
-const clin=id=>`<span class="clin" style="--cc:var(${clinic(id).c})">${esc(clinic(id).ar)}</span>`;
+const clin=id=>`<span class="clin" style="--cc:${cv(clinic(id).c)}">${esc(clinic(id).ar)}</span>`;
 const plural=n=>n===1?"فرد واحد":n===2?"فردان":n<=10?n+" أفراد":n+" فرداً";
 const teamTxt=o=>{const t=o.team||[];if(!t.length)return '<span class="muted">لم يُحدد</span>';const lead=t.find(x=>x.id===o.leader);if(!lead)return `<span class="muted">بدون Focal Point</span><span class="sub">${plural(t.length)}</span>`;const ph=lead.phone||(S.staff.find(s=>s.id===lead.id)||{}).phone;return `${esc(lead.name)} <span class="fp" title="Focal Point"><svg class="fpi" width="13" height="13" viewBox="0 0 14 14" aria-hidden="true"><circle cx="7" cy="7" r="5.4" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="7" cy="7" r="2.2" fill="currentColor"/></svg></span><span class="sub">${ph?`<span class="mono">${esc(ph)}</span> · `:""}${plural(t.length)}</span>`};
 const canWrite=()=>!S.readOnly&&S.mode!=="error";
 const addBtn=(label="عملية جديدة")=>`<button class="btn primary" data-act="new-op" ${canWrite()?"":"disabled"}><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M7 1v12M1 7h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>${label}</button>`;
 
-function topbar(title,sub){
-  const d=new Date();
+function topbar(key,title,sub){
+  const d=new Date();title=T(key+".t")??title;if(key!=="week")sub=T(key+".s")??sub;if(key==="staff")title+=` (${S.staff.length})`;
   return `<div class="topbar"><div class="title"><h1>${title}</h1>${sub?`<p>${sub}</p>`:""}</div>
   <div class="tools"><label class="search"><input id="q" type="search" placeholder="بحث: كود، عيادة، مخيم، اسم…" value="${esc(S.f.q)}" aria-label="بحث"><svg width="15" height="15" viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.6" fill="none"/><path d="M11 11l3.5 3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></label>
   <span class="today">${fmtDay(d)} · <span class="mono">${iso(d)}</span></span>${addBtn()}</div></div>
@@ -406,7 +538,7 @@ function vOverview(){
   const f=S.f;const list=sortOps(S.ops.filter(o=>(!f.clinic||o.clinic===f.clinic)&&(!f.status||o.status===f.status)&&(!f.service||o.service===f.service)&&inRange(o,f.range)&&matchQ(o,f.q)));
   const alerts=[...S.ops.filter(o=>["Delayed","OnHold"].includes(o.status)).map(o=>({o,bad:o.status==="OnHold",msg:o.status==="OnHold"?"العملية مؤجلة":"العملية متأخرة عن موعدها"})),...S.ops.filter(late).map(o=>({o,bad:false,msg:`مرّ موعد الانطلاق ${o.dep} ولم تبدأ بعد`}))];
   const ben=today.reduce((a,o)=>a+(+rep(o).ben||0),0);
-  return topbar("نظرة عامة","متابعة زيارات فرق الصحة والتغذية إلى المخيمات ومراكز الإيواء.")+`
+  return topbar("overview","نظرة عامة","متابعة زيارات فرق الصحة والتغذية إلى المخيمات ومراكز الإيواء.")+`
   <div class="kpis">
     <div class="kpi"><span>عمليات اليوم</span><b>${N(today.length)}</b><small>مخطط لها</small></div>
     <div class="kpi good"><span>فرق في الميدان</span><b>${N(today.filter(o=>ACTIVE.includes(o.status)).length)}</b><small>غادرت أو في الموقع</small></div>
@@ -431,14 +563,14 @@ function vOverview(){
         ${alerts.length?`<div class="alerts">${alerts.map(a=>`<div class="alert ${a.bad?"bad":""}"><span class="bar"></span><div><p><b class="mono">${esc(a.o.code)}</b> · ${esc(point(a.o.point).ar)}</p><small>${a.msg} · ${esc(clinic(a.o.clinic).ar)}</small></div></div>`).join("")}</div>`:`<div class="okline">كل الزيارات تسير حسب الخطة.</div>`}
       </section>
       <section class="panel"><div class="panel-h"><h2>العيادات</h2><a class="linkbtn" href="#clinics">كل العيادات ←</a></div>
-        <div>${CLINICS.map(c=>{const pts=POINTS.filter(p=>p.clinic===c.id).length,st=S.staff.filter(s=>s.clinic===c.id).length,td=today.filter(o=>o.clinic===c.id).length;return `<div class="crow" style="--cc:var(${c.c})"><div>${clin(c.id)}<div class="meta">${esc(c.area)}</div></div><div class="meta" style="text-align:left">${pts} نقاط · ${st} كادر<br>${td} عملية اليوم</div><div class="meter"><i style="width:${Math.min(100,st/4*100)}%"></i></div></div>`}).join("")}</div>
+        <div>${CLINICS.map(c=>{const pts=POINTS.filter(p=>p.clinic===c.id).length,st=S.staff.filter(s=>s.clinic===c.id).length,td=today.filter(o=>o.clinic===c.id).length;return `<div class="crow" style="--cc:${cv(c.c)}"><div>${clin(c.id)}<div class="meta">${esc(c.area)}</div></div><div class="meta" style="text-align:left">${pts} نقاط · ${st} كادر<br>${td} عملية اليوم</div><div class="meter"><i style="width:${Math.min(100,st/4*100)}%"></i></div></div>`}).join("")}</div>
       </section>
     </div>
   </div>`}
 
 function vOps(){
   const f=S.f;const list=sortOps(S.ops.filter(o=>(!f.clinic||o.clinic===f.clinic)&&(!f.status||o.status===f.status)&&(!f.service||o.service===f.service)&&matchQ(o,f.q))).reverse();
-  return topbar("سجل عمليات Outreach","كل العمليات المجدولة والمنفذة. اضغط على أي صف لتعديله أو إغلاقه بتقرير زيارة.")+`
+  return topbar("ops","سجل عمليات Outreach","كل العمليات المجدولة والمنفذة. اضغط على أي صف لتعديله أو إغلاقه بتقرير زيارة.")+`
   <section class="panel"><div class="panel-h"><div class="filters">
     <select data-f="clinic" aria-label="العيادة">${clinicOpts(f.clinic,"كل العيادات")}</select>
     <select data-f="status" aria-label="الحالة">${opts(STATUSES,f.status,"كل الحالات")}</select>
@@ -453,49 +585,50 @@ function vWeek(){
   const ops=S.ops.filter(o=>!S.f.weekClinic||o.clinic===S.f.weekClinic);
   const total=ops.filter(o=>o.date>=iso(w[0])&&o.date<=iso(w[6])).length;
   const covered=new Set(ops.filter(o=>o.date>=iso(w[0])&&o.date<=iso(w[6])).map(o=>o.point)).size;
-  return topbar("الخطة الأسبوعية",`من السبت <span class="mono">${iso(w[0])}</span> إلى الجمعة <span class="mono">${iso(w[6])}</span>`)+`
+  return topbar("week","الخطة الأسبوعية",`من السبت <span class="mono">${iso(w[0])}</span> إلى الجمعة <span class="mono">${iso(w[6])}</span>`)+`
   <div class="filters">
     <button class="btn sm" data-act="wk" data-d="-1">→ الأسبوع السابق</button><button class="btn sm" data-act="wk" data-d="0">هذا الأسبوع</button><button class="btn sm" data-act="wk" data-d="1">الأسبوع التالي ←</button>
     <select data-f="weekClinic" aria-label="العيادة">${clinicOpts(S.f.weekClinic,"كل العيادات")}</select>
     <span class="meta">${N(total)} عملية · تغطي ${covered} من ${POINTS.length} نقطة</span></div>
   <div class="week">${w.map(d=>{const ds=iso(d);const list=sortOps(ops.filter(o=>o.date===ds));return `<div class="day ${ds===t?"is-today":""}"><div class="day-h"><b>${fmtDay(d)}</b><span class="mono">${ds.slice(5)}</span></div><div class="day-b">
-    ${list.length?list.map(o=>`<button class="op-card" style="--cc:var(${clinic(o.clinic).c})" data-open="${esc(o.id)}"><b>${esc(point(o.point).ar)}</b><span class="muted">${esc(clinic(o.clinic).ar)} · <span class="mono">${esc(o.dep)}</span></span>${chip(o.status)}</button>`).join(""):`<span class="none">لا توجد زيارات</span>`}
+    ${list.length?list.map(o=>`<button class="op-card" style="--cc:${cv(clinic(o.clinic).c)}" data-open="${esc(o.id)}"><b>${esc(point(o.point).ar)}</b><span class="muted">${esc(clinic(o.clinic).ar)} · <span class="mono">${esc(o.dep)}</span></span>${chip(o.status)}</button>`).join(""):`<span class="none">لا توجد زيارات</span>`}
     ${canWrite()?`<button class="btn sm" style="justify-content:center;margin-top:auto" data-act="new-op" data-date="${ds}">+ إضافة</button>`:""}</div></div>`}).join("")}</div>`}
 
 function vClinics(){
-  return topbar("العيادات","العيادات التي تخرج منها الفرق، مع الكوادر والمخيمات التابعة لكل عيادة.")+`
-  <div class="cards">${CLINICS.map(c=>{const pts=POINTS.filter(p=>p.clinic===c.id),st=S.staff.filter(s=>s.clinic===c.id).length,ops=S.ops.filter(o=>o.clinic===c.id).length;return `<article class="card" style="--cc:var(${c.c})">
+  return topbar("clinics","العيادات","العيادات التي تخرج منها الفرق، مع الكوادر والمخيمات التابعة لكل عيادة.")+`
+  <div class="cards">${CLINICS.map(c=>{const pts=POINTS.filter(p=>p.clinic===c.id),st=S.staff.filter(s=>s.clinic===c.id).length,ops=S.ops.filter(o=>o.clinic===c.id).length;return `<article class="card" style="--cc:${cv(c.c)}">
     <div><h3>${esc(c.ar)}</h3><div class="en">${esc(c.en)}</div></div>
     <div class="trio"><div><b>${pts.length}</b><span>نقاط تابعة</span></div><div><b>${st}</b><span>كوادر</span></div><div><b>${ops}</b><span>عمليات</span></div></div>
     <dl class="kv"><dt>المنطقة</dt><dd>${esc(c.area)}</dd><dt>المدير</dt><dd>${esc(c.mgr)}</dd><dt>الإطار</dt><dd>${c.frame}</dd><dt>النقاط</dt><dd>${pts.map(p=>esc(p.ar)).join("، ")}</dd></dl>
     ${canWrite()?`<button class="btn sm" data-act="new-op" data-clinic="${c.id}">إضافة عملية لهذه العيادة</button>`:""}</article>`}).join("")}</div>`}
 
 function mapSVG(pts){
-  const W=640,H=380,m=36,la=[31.355,31.54],lo=[34.265,34.45];
+  const W=640,H=380,m=36;const g=POINTS.filter(p=>p.lat!==""&&p.lat!=null&&isFinite(+p.lat)&&isFinite(+p.lon));pts=pts.filter(p=>g.includes(p));
+  const lats=g.map(p=>+p.lat),lons=g.map(p=>+p.lon);let la=[Math.min(31.355,...lats)-.008,Math.max(31.54,...lats)+.008],lo=[Math.min(34.265,...lons)-.008,Math.max(34.45,...lons)+.008];
   const x=v=>m+(v-lo[0])/(lo[1]-lo[0])*(W-2*m),y=v=>H-m-(v-la[0])/(la[1]-la[0])*(H-2*m);
-  const grid=[31.38,31.42,31.46,31.50].map(v=>`<line x1="${m}" x2="${W-m}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)" stroke-dasharray="3 4"/><text x="${W-m+4}" y="${y(v)+4}" font-size="10" fill="var(--muted)" font-family="IBM Plex Mono,monospace">${v.toFixed(2)}°N</text>`).join("");
+  const grid=[0.2,0.4,0.6,0.8].map(t=>+(la[0]+t*(la[1]-la[0])).toFixed(2)).map(v=>`<line x1="${m}" x2="${W-m}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)" stroke-dasharray="3 4"/><text x="${W-m+4}" y="${y(v)+4}" font-size="10" fill="var(--muted)" font-family="IBM Plex Mono,monospace">${v.toFixed(2)}°N</text>`).join("");
   const labels=[["غزة",31.52,34.415],["دير البلح",31.405,34.335],["النصيرات",31.468,34.37],["خانيونس المواصي",31.352,34.285]].map(([t,a,b])=>`<text x="${x(b)}" y="${y(a)}" font-size="12" fill="var(--muted)" font-family="IBM Plex Sans Arabic,sans-serif" text-anchor="middle">${t}</text>`).join("");
   return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="مواقع النقاط حسب الإحداثيات">${grid}${labels}
    <text x="${m}" y="${m-12}" font-size="11" fill="var(--muted)" font-family="IBM Plex Sans Arabic,sans-serif">↑ شمال · الغرب يسار (جهة البحر)</text>
-   ${pts.map(p=>`<circle cx="${x(p.lon).toFixed(1)}" cy="${y(p.lat).toFixed(1)}" r="${4+p.visits/8}" fill="var(${clinic(p.clinic).c})" fill-opacity=".75" stroke="var(--surface)" stroke-width="1.5"><title>${esc(p.ar)} · ${p.visits} زيارة</title></circle>`).join("")}</svg>`}
+   ${pts.map(p=>`<circle cx="${x(+p.lon).toFixed(1)}" cy="${y(+p.lat).toFixed(1)}" r="${4+p.visits/8}" fill="${cv(clinic(p.clinic).c)}" fill-opacity=".75" stroke="var(--surface)" stroke-width="1.5"><title>${esc(p.ar)} · ${p.visits} زيارة</title></circle>`).join("")}</svg>`}
 
 function vPoints(){
   const f=S.f;const done=id=>S.ops.filter(o=>o.point===id&&o.status==="Completed").length;
   const list=POINTS.filter(p=>(!f.ptType||p.type===f.ptType)&&(!f.ptClinic||p.clinic===f.ptClinic)&&(!f.q||(p.ar+p.en+p.addr).toLowerCase().includes(f.q.toLowerCase())));
-  return topbar("نقاط Outreach والمخيمات","مخيمات النزوح ومراكز الإيواء المستهدفة بخدمات الصحة والتغذية.")+`
+  return topbar("points","نقاط Outreach والمخيمات","مخيمات النزوح ومراكز الإيواء المستهدفة بخدمات الصحة والتغذية.")+`
   <section class="panel map"><div class="panel-h"><h2>توزيع النقاط جغرافياً</h2><p>حجم الدائرة يعكس عدد الزيارات</p></div><div class="panel-b">${mapSVG(list)}</div>
-    <div class="legend">${CLINICS.map(c=>`<span class="clin" style="--cc:var(${c.c})">${esc(c.ar)}</span>`).join("")}</div></section>
+    <div class="legend">${CLINICS.map(c=>`<span class="clin" style="--cc:${cv(c.c)}">${esc(c.ar)}</span>`).join("")}</div></section>
   <section class="panel"><div class="panel-h"><div class="filters">
     <select data-f="ptType" aria-label="نوع الموقع">${opts(Object.entries(PT_TYPES),f.ptType,"كل أنواع المواقع")}</select>
     <select data-f="ptClinic" aria-label="العيادة المشرفة">${clinicOpts(f.ptClinic,"كل العيادات المشرفة")}</select></div><span class="meta muted">${list.length} من ${POINTS.length} نقطة</span></div>
     <div class="tbl-wrap"><table><thead><tr><th>النقطة</th><th>النوع</th><th>العيادة المشرفة</th><th>الزيارات</th><th>الإحداثيات</th></tr></thead><tbody>
-    ${list.map(p=>`<tr><td><b>${esc(p.ar)}</b><span class="sub">${esc(p.addr)}</span></td><td>${PT_TYPES[p.type]}</td><td>${clin(p.clinic)}</td><td class="num">${p.visits+done(p.id)}</td><td class="mono">${p.lat.toFixed(4)}, ${p.lon.toFixed(4)}</td></tr>`).join("")}
+    ${list.map(p=>`<tr><td><b>${esc(p.ar)}</b><span class="sub">${esc(p.addr)}</span></td><td>${PT_TYPES[p.type]}</td><td>${clin(p.clinic)}</td><td class="num">${p.visits+done(p.id)}</td><td>${p.lat!==""&&p.lat!=null?`<a class="mono" href="${mapsUrl(p.lat,p.lon)}" target="_blank" rel="noopener">${(+p.lat).toFixed(4)}, ${(+p.lon).toFixed(4)}</a>`:'<span class="muted">—</span>'}${S.admin?` <button class="btn sm" data-act="ent-edit" data-kind="point" data-id="${esc(p.id)}">تعديل</button>`:""}</td></tr>`).join("")}
     </tbody></table></div></section>`}
 
 function vStaff(){
   const f=S.f,e=S.editStaff?S.staff.find(s=>s.id===S.editStaff):null;
   const list=S.staff.filter(s=>(!f.stClinic||s.clinic===f.stClinic)&&(!f.stRole||s.role===f.stRole)&&(!f.q||s.name.includes(f.q))).sort((a,b)=>a.name.localeCompare(b.name,"ar"));
-  return topbar(`الكوادر (${S.staff.length})`,"أضف الكوادر وحدّد عيادة كل منهم ليظهروا عند اختيار فريق أي عملية.")+`
+  return topbar("staff","الكوادر","أضف الكوادر وحدّد عيادة كل منهم ليظهروا عند اختيار فريق أي عملية.")+`
   ${canWrite()?`<section class="panel"><div class="panel-h"><h2>${e?"تعديل بيانات "+esc(e.name):"إضافة سريعة لكادر"}</h2><p>يظهر فوراً في القائمة ولكل الفريق</p></div>
   <form class="panel-b quick" id="staffForm">
     <div class="field name"><label for="sf-name">الاسم *</label><input id="sf-name" required value="${esc(e?.name||"")}" placeholder="الاسم الكامل"></div>
@@ -510,7 +643,7 @@ function vStaff(){
     ${!list.length?`<div class="empty"><b>${S.ready.staff?"لا يوجد كوادر بعد":"جارٍ التحميل…"}</b>${S.ready.staff?"أضف الكوادر من النموذج أعلاه.":""}</div>`:
     `<div class="tbl-wrap"><table><thead><tr><th>الكادر</th><th>الدور</th><th>العيادة</th><th>الهاتف</th><th>في عمليات اليوم</th><th></th></tr></thead><tbody>
     ${list.map(s=>{const busy=S.ops.some(o=>o.date===todayISO()&&!["Completed"].includes(o.status)&&(o.team||[]).some(t=>t.id===s.id));return `<tr><td><div class="person"><span class="avatar">${esc(s.name.trim()[0]||"؟")}</span><b>${esc(s.name)}</b></div></td><td>${esc(RL[s.role]||s.role)}</td><td>${clin(s.clinic)}</td><td class="mono">${esc(s.phone||"—")}</td><td>${busy?'<span class="chip s-OnSite"><i></i>في زيارة</span>':'<span class="chip s-Completed"><i></i>متاح</span>'}</td>
-    <td>${canWrite()?`<div class="filters" style="flex-wrap:nowrap"><button class="btn sm" data-act="edit-staff" data-id="${esc(s.id)}">تعديل</button>${S.confirmDel===s.id?`<button class="btn sm danger" data-act="del-staff" data-id="${esc(s.id)}">تأكيد الحذف</button>`:`<button class="btn sm danger" data-act="ask-del" data-id="${esc(s.id)}">حذف</button>`}</div>`:""}</td></tr>`}).join("")}
+    <td>${canWrite()?`<div class="filters" style="flex-wrap:nowrap"><button class="btn sm" data-act="edit-staff" data-id="${esc(s.id)}">تعديل</button>${!S.admin?"":S.confirmDel===s.id?`<button class="btn sm danger" data-act="del-staff" data-id="${esc(s.id)}">تأكيد الحذف</button>`:`<button class="btn sm danger" data-act="ask-del" data-id="${esc(s.id)}">حذف</button>`}</div>`:""}</td></tr>`}).join("")}
     </tbody></table></div>`}</section>`}
 
 function vReports(){
@@ -520,7 +653,7 @@ function vReports(){
   const max=Math.max(1,...CLINICS.map(c=>ops.filter(o=>o.clinic===c.id).length));
   const groups=[["مكتملة",["Completed"],"--ok"],["نشطة في الميدان",ACTIVE,"--live"],["مخططة / جاهزة",["Planned","Ready"],"--info"],["متأخرة / مؤجلة",["Delayed","OnHold"],"--yellow"]];
   const top=[...POINTS].map(p=>({...p,v:p.visits+done.filter(o=>o.point===p.id).length})).sort((a,b)=>b.v-a.v).slice(0,5);
-  return topbar("التقارير","نتائج الزيارات: الاستشارات الطبية، فحوصات MUAC، وحالات سوء التغذية.")+`
+  return topbar("reports","التقارير","نتائج الزيارات: الاستشارات الطبية، فحوصات MUAC، وحالات سوء التغذية.")+`
   <div class="kpis">
     <div class="kpi"><span>إجمالي العمليات</span><b>${N(ops.length)}</b><small>نسبة الإنجاز ${pct}%</small></div>
     <div class="kpi"><span>المستفيدون</span><b>${N(sum("ben"))}</b><small>رعاية أولية وتغذية</small></div>
@@ -530,10 +663,10 @@ function vReports(){
   </div>
   <div class="grid2">
     <section class="panel"><div class="panel-h"><h2>العمليات حسب العيادة</h2></div><div class="panel-b bars">
-      ${CLINICS.map(c=>{const n=ops.filter(o=>o.clinic===c.id).length;return `<div class="barrow" style="--cc:var(${c.c})"><span>${esc(c.ar)}</span><div class="track"><i style="width:${n/max*100}%"></i></div><span class="v">${n} · ${ops.length?Math.round(n/ops.length*100):0}%</span></div>`}).join("")}
+      ${CLINICS.map(c=>{const n=ops.filter(o=>o.clinic===c.id).length;return `<div class="barrow" style="--cc:${cv(c.c)}"><span>${esc(c.ar)}</span><div class="track"><i style="width:${n/max*100}%"></i></div><span class="v">${n} · ${ops.length?Math.round(n/ops.length*100):0}%</span></div>`}).join("")}
     </div></section>
     <section class="panel"><div class="panel-h"><h2>توزيع الحالات</h2></div><div class="panel-b bars">
-      ${groups.map(([l,st,c])=>{const n=ops.filter(o=>st.includes(o.status)).length;return `<div class="barrow" style="--cc:var(${c})"><span>${l}</span><div class="track"><i style="width:${ops.length?n/ops.length*100:0}%"></i></div><span class="v">${n}</span></div>`}).join("")}
+      ${groups.map(([l,st,c])=>{const n=ops.filter(o=>st.includes(o.status)).length;return `<div class="barrow" style="--cc:${cv(c)}"><span>${l}</span><div class="track"><i style="width:${ops.length?n/ops.length*100:0}%"></i></div><span class="v">${n}</span></div>`}).join("")}
     </div>
     <div class="panel-h" style="border-top:1px solid var(--line)"><h2>الأكثر زيارة</h2></div>
     <div>${top.map((p,i)=>`<div class="crow"><div><b class="num">${i+1}.</b> ${esc(p.ar)}<div class="meta">${esc(clinic(p.clinic).ar)}</div></div><div class="num">${p.v} زيارة</div></div>`).join("")}</div></section>
@@ -543,7 +676,7 @@ function vReports(){
   ${sortOps(done).reverse().map(o=>`<tr class="click" data-open="${esc(o.id)}"><td class="mono">${esc(o.code)}</td><td class="mono">${esc(o.date)}</td><td>${esc(point(o.point).ar)}<span class="sub">${esc(clinic(o.clinic).ar)}</span></td><td class="num">${N(rep(o).ben)}</td><td class="num">${N(rep(o).cons)}</td><td class="num">${N(rep(o).mam)}</td><td class="num">${N(rep(o).sam)}</td><td>${esc(rep(o).note||"")}</td></tr>`).join("")}
   </tbody></table></div>`:`<div class="empty"><b>لا توجد تقارير بعد</b>عند تحويل أي عملية إلى "مكتملة" يُطلب إدخال نتائج الزيارة وتظهر هنا.</div>`}</section>`}
 
-const RENDER={overview:vOverview,ops:vOps,week:vWeek,clinics:vClinics,points:vPoints,staff:vStaff,reports:vReports};
+const RENDER={admin:vAdmin,overview:vOverview,ops:vOps,week:vWeek,clinics:vClinics,points:vPoints,staff:vStaff,reports:vReports};
 function render(){
   const a=document.activeElement,id=a&&a.id,pos=a&&a.selectionStart;
   renderNav();$("#view").innerHTML=RENDER[cur()]();
@@ -573,7 +706,7 @@ function openOp(op,preset={}){
   form.innerHTML=`<div class="dlg-h"><div><h2>${isNew?"عملية Outreach جديدة":"عملية <span class=\"mono\">"+esc(o.code)+"</span>"}</h2><span class="muted" style="font-size:12.5px">المكان والموعد والفريق</span></div><button type="button" class="btn sm" data-x aria-label="إغلاق">✕</button></div>
   <fieldset class="dlg-b" style="border:0;margin:0" ${ro?"disabled":""}>
     <div class="field"><label for="o-clinic">العيادة</label><select id="o-clinic">${clinicOpts(o.clinic)}</select></div>
-    <div class="field"><label for="o-point">مكان الزيارة</label><select id="o-point"></select></div>
+    <div class="field"><label for="o-point">مكان الزيارة</label><select id="o-point"></select><small class="coords" id="o-coords"></small></div>
     <div class="field"><label for="o-date">التاريخ</label><input id="o-date" type="date" value="${esc(o.date)}" required></div>
     <div class="field" style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><div class="field"><label for="o-dep">الانطلاق</label><input id="o-dep" type="time" value="${esc(o.dep)}"></div><div class="field"><label for="o-ret">العودة</label><input id="o-ret" type="time" value="${esc(o.ret)}"></div></div>
     <div class="field"><label for="o-service">نوع الخدمة</label><select id="o-service">${opts(SERVICES,o.service)}</select></div>
@@ -588,8 +721,9 @@ function openOp(op,preset={}){
       <div class="field" style="grid-column:1/-1"><label for="r-note">ملاحظة التقرير</label><input id="r-note" value="${esc(rep(o).note||"")}" placeholder="مثال: نفاد حليب علاجي، تحويل حالتين للمستشفى"></div></div>
     <div class="field full"><label for="o-notes">ملاحظات</label><textarea id="o-notes" rows="2" placeholder="المستلزمات الطبية، التنسيق مع المجتمع، ملاحظات التنقل…">${esc(o.notes||"")}</textarea></div>
   </fieldset>
-  <div class="dlg-f"><div class="filters">${!isNew&&!ro?`<button type="button" class="btn danger" data-del>حذف</button>`:""}${!isNew?`<button type="button" class="btn" data-export>بطاقة الزيارة PDF / JPG</button>`:""}</div><div class="filters"><button type="button" class="btn" data-x>${ro?"إغلاق":"إلغاء"}</button>${ro?"":`<button type="submit" class="btn primary">${isNew?"حفظ وإعداد بطاقة الزيارة":"حفظ التعديلات"}</button>`}</div></div>`;
-  const fillPoints=()=>{const pts=POINTS.filter(p=>p.clinic===o.clinic);if(!pts.some(p=>p.id===o.point))o.point=pts[0]?.id;$("#o-point").innerHTML=opts(pts.map(p=>[p.id,`${p.ar} (${PT_TYPES[p.type]})`]),o.point)};
+  <div class="dlg-f"><div class="filters">${!isNew&&!ro&&S.admin?`<button type="button" class="btn danger" data-del>حذف</button>`:""}${!isNew?`<button type="button" class="btn" data-export>بطاقة الزيارة PDF / JPG</button>`:""}</div><div class="filters"><button type="button" class="btn" data-x>${ro?"إغلاق":"إلغاء"}</button>${ro?"":`<button type="submit" class="btn primary">${isNew?"حفظ وإعداد بطاقة الزيارة":"حفظ التعديلات"}</button>`}</div></div>`;
+  const fillPoints=()=>{const pts=POINTS.filter(p=>p.clinic===o.clinic);if(!pts.some(p=>p.id===o.point))o.point=pts[0]?.id;$("#o-point").innerHTML=opts(pts.map(p=>[p.id,`${p.ar} (${PT_TYPES[p.type]||p.type})`]),o.point);showCoords()};
+  const showCoords=()=>{const p=point(o.point),el=$("#o-coords");if(!el)return;el.innerHTML=p.lat!==""&&p.lat!=null&&p.lat!==undefined?`<span class="mono">${(+p.lat).toFixed(5)}, ${(+p.lon).toFixed(5)}</span> · <a href="${mapsUrl(p.lat,p.lon)}" target="_blank" rel="noopener">فتح في الخرائط</a>`:"لا توجد إحداثيات لهذا المكان"};
   const fillTeam=()=>{$("#teamBox").innerHTML=teamHTML();$("#leadBox").innerHTML=leadHTML();$("#teamCount").textContent=`· تم اختيار ${o.team.length}`};
   const showRep=()=>{$("#repBox").hidden=$("#o-status").value!=="Completed"};
   const setLeader=id=>{o.leader=id;o.leadPhone=id?(staffPhone(id)||(o.team.find(t=>t.id===id)||{}).phone||""):""};
@@ -597,7 +731,7 @@ function openOp(op,preset={}){
   form.oninput=e=>{if(e.target.id==="lead-phone"){o.leadPhone=e.target.value.trim();const b=form.querySelector("[data-copyph]");if(b)b.disabled=!o.leadPhone}};
   form.onchange=e=>{const t=e.target;
     if(t.id==="o-clinic"){o.clinic=t.value;fillPoints();fillTeam()}
-    if(t.id==="o-point")o.point=t.value;
+    if(t.id==="o-point"){o.point=t.value;showCoords()}
     if(t.id==="o-status")showRep();
     if(t.dataset.lead){setLeader(t.dataset.lead);fillTeam()}
     if(t.dataset.team){const id=t.dataset.team;const s=S.staff.find(x=>x.id===id)||o.team.find(x=>x.id===id);o.team=o.team.filter(x=>x.id!==id);
@@ -647,11 +781,11 @@ async function drawSheet(o){
   const fit=(s,w,max,weight,fam)=>{let fs=max;x.font=`${weight} ${fs}px ${fam}`;while(x.measureText(s).width>w&&fs>16){fs-=2;x.font=`${weight} ${fs}px ${fam}`}return x.font};
   const sec=(t,y)=>{x.fillStyle=C.teal;x.fillRect(R-8,y-26,8,32);txt(t,R-22,y,`600 30px ${DS}`,C.navy)};
   const cl=clinic(o.clinic),pt=point(o.point),d=new Date(o.date+"T00:00");
-  const clHex=(getComputedStyle(document.documentElement).getPropertyValue(cl.c)||C.blue).trim()||C.blue;
+  const clHex=hexOf(cl.c);
   x.fillStyle="#ffffff";x.fillRect(0,0,W,H);
   x.fillStyle=C.navy;x.fillRect(0,0,W,230);x.fillStyle=C.teal;x.fillRect(0,230,W,10);
   txt("بطاقة زيارة ميدانية",R,112,`600 58px ${DS}`,"#ffffff");
-  txt("عمليات Outreach · الصحة والتغذية",R,170,`400 28px ${AR}`,C.pale);
+  txt(`${T("siteName")} · الصحة والتغذية`,R,170,`400 28px ${AR}`,C.pale);
   txt(o.code,M,112,`500 46px ${MO}`,"#ffffff","left","ltr");
   const pill={Delayed:[C.yellow,"#000000"],OnHold:[C.red,"#ffffff"]}[o.status]||["#ffffff",C.navy];
   x.font=`600 24px ${AR}`;const sw=x.measureText(ST[o.status]||o.status).width+48;box(M,142,sw,48,pill[0],null,24);txt(ST[o.status]||o.status,M+sw/2,175,`600 24px ${AR}`,pill[1],"center");
@@ -660,7 +794,7 @@ async function drawSheet(o){
   const card=(xr,y0,w,h,label,val,sub,mark)=>{box(xr-w,y0,w,h,C.soft,C.line);if(mark){x.fillStyle=mark;x.fillRect(xr-w+24,y0+26,18,18)}txt(label,xr-24,y0+44,`400 22px ${AR}`,C.muted);x.font=fit(val,w-48,36,600,DS);txt(val,xr-24,y0+92,x.font,C.ink);let yy=y0+132;for(const ln of wrap(sub,`400 22px ${AR}`,w-48).slice(0,2)){txt(ln,xr-24,yy,`400 22px ${AR}`,C.muted);yy+=32}};
   card(R,y,half,200,"العيادة",cl.ar,`${cl.area} · المدير: ${cl.mgr}`,clHex);
   card(R-half-24,y,half,200,"مكان الزيارة",pt.ar,pt.addr||"");
-  if(pt.lat)txt(`${pt.lat.toFixed(4)}, ${pt.lon.toFixed(4)}`,R-half-24-half+24,y+44,`500 20px ${MO}`,C.muted,"left","ltr");
+  if(pt.lat!==""&&pt.lat!=null&&isFinite(+pt.lat))txt(`${(+pt.lat).toFixed(4)}, ${(+pt.lon).toFixed(4)}`,R-half-24-half+24,y+44,`500 20px ${MO}`,C.muted,"left","ltr");
   y+=224;const q=(CW-3*20)/4;
   [[`التاريخ · ${fmtDay(d)}`,o.date,MO,500],["موعد الانطلاق",o.dep||"—",MO,500],["موعد العودة",o.ret||"—",MO,500],["نوع الخدمة",SV[o.service]||o.service,DS,600]].forEach(([l,v,fam,wt],i)=>{const xr=R-i*(q+20);box(xr-q,y,q,124,"#ffffff",C.line);txt(l,xr-22,y+44,`400 21px ${AR}`,C.muted);const f=fit(v,q-44,32,wt,fam);txt(v,xr-22,y+96,f,C.ink,"right",fam===MO?"ltr":"rtl")});
   y+=190;const team=o.team||[];sec(`الفريق (${team.length})`,y);y+=30;
@@ -679,7 +813,7 @@ async function drawSheet(o){
   const fy=H-210,sw2=(CW-60)/2;
   [["Focal Point",R],["مدير العيادة",R-sw2-60]].forEach(([l,xr])=>{txt(l,xr,fy,`400 22px ${AR}`,C.muted);x.fillStyle=C.ink;x.fillRect(xr-sw2,fy+70,sw2,2)});
   x.fillStyle=C.navy;x.fillRect(0,H-72,W,72);
-  txt(`أُعدّت في ${iso(new Date())} الساعة ${nowHM()} · عمليات Outreach`,R,H-27,`400 21px ${AR}`,C.pale);
+  txt(`أُعدّت في ${iso(new Date())} الساعة ${nowHM()} · ${T("siteName")}`,R,H-27,`400 21px ${AR}`,C.pale);
   txt(`${cl.en} → ${pt.en||""}`,M,H-27,`400 20px ${AR}`,C.pale,"left","ltr");
   return c}
 async function showExport(op,saved){
@@ -720,7 +854,15 @@ document.addEventListener("click",async e=>{
     if(act==="new-op")openOp(null,{date:a.dataset.date,clinic:a.dataset.clinic});
     if(act==="reset"){Object.assign(S.f,{clinic:"",status:"",service:"",range:"today",q:""});render()}
     if(act==="wk"){S.f.weekOffset=a.dataset.d==="0"?0:S.f.weekOffset+Number(a.dataset.d);render()}
-    if(act==="backup"){const data=JSON.stringify({app:"outreach-ops",exportedAt:new Date().toISOString(),ops:S.ops,staff:S.staff},null,2);saveFile(`outreach-backup_${todayISO()}.json`,new Blob([data],{type:"application/json"}))}
+    if(act==="admin-toggle"){S.admin?(S.mode==="local"?exitAdmin():location.hash="admin"):adminLogin()}
+    if(act==="admin-login")adminLogin();
+    if(act==="admin-out")exitAdmin();
+    if(act==="admin-pass"){const keep=S.config.adminHash;S.config.adminHash=null;adminLogin();S.config.adminHash=keep;$("#opForm h2").textContent="تغيير كلمة مرور المشرف";$("#opForm button[type=submit]").textContent="حفظ كلمة المرور";$("#opForm").onsubmit=(orig=>async e=>{e.preventDefault();const p=$("#ad-pass").value,err=$("#ad-err");if(p.length<6||p!==$("#ad-pass2").value){err.textContent=p.length<6?"كلمة المرور يجب أن تكون 6 أحرف على الأقل.":"كلمتا المرور غير متطابقتين.";err.hidden=false;return}const h=await sha(p);await saveConfig({adminHash:h});try{sessionStorage.setItem("outreach-admin",h)}catch(x){}$("#opDlg").close();toast("تغيّرت كلمة مرور المشرف")})()}
+    if(act==="ent-new")editEntity(a.dataset.kind);
+    if(act==="ent-edit")editEntity(a.dataset.kind,a.dataset.id);
+    if(act==="ent-ask"){S.confirmEnt=a.dataset.kind+":"+a.dataset.id;render()}
+    if(act==="ent-del")deleteEntity(a.dataset.kind,a.dataset.id);
+    if(act==="backup"){const data=JSON.stringify({app:"outreach-ops",exportedAt:new Date().toISOString(),ops:S.ops,staff:S.staff,config:S.config},null,2);saveFile(`outreach-backup_${todayISO()}.json`,new Blob([data],{type:"application/json"}))}
     if(act==="csv-ops")exportCSV("outreach-operations.csv",opsRows());
     if(act==="csv-rep")exportCSV("outreach-visit-reports.csv",opsRows().filter((r,i)=>i===0||r[5]===ST.Completed));
     if(act==="edit-staff"){S.editStaff=a.dataset.id;render();$("#sf-name")?.focus()}
@@ -735,6 +877,7 @@ document.addEventListener("change",async e=>{
   const t=e.target;if(t.closest("#opDlg"))return;
   if(t.id==="restoreFile"&&t.files&&t.files[0]){try{const d=JSON.parse(await t.files[0].text());let n=0;
       for(const col of ["ops","staff"])for(const r of (d[col]||[])){if(!r||!r.id)continue;const {id,...b}=r;await put(col,id,b);n++}
+      if(d.config&&S.admin){await saveConfig(d.config);n++}
       toast(`استُعيد ${n} سجل من النسخة الاحتياطية`)}catch(err){toast("الملف غير صالح. اختر ملف نسخة احتياطية بصيغة JSON من هذا النظام.")}t.value="";return}
   if(t.dataset.f){S.f[t.dataset.f]=t.value;render();return}
   if(t.dataset.status){const o=S.ops.find(x=>x.id===t.dataset.status);if(!o)return;
@@ -743,6 +886,7 @@ document.addEventListener("change",async e=>{
 });
 document.addEventListener("input",e=>{if(e.target.id==="q"){S.f.q=e.target.value;clearTimeout(render.t);render.t=setTimeout(render,180)}});
 document.addEventListener("submit",async e=>{
+  if(e.target.id==="labelsForm"){e.preventDefault();const labels={};e.target.querySelectorAll("[data-lb]").forEach(i=>{if(i.value.trim())labels[i.dataset.lb]=i.value.trim()});if(await saveConfig({labels}))toast("حُفظت العناوين");return}
   if(e.target.id!=="staffForm")return;e.preventDefault();
   const name=$("#sf-name").value.trim();if(!name)return;
   const id=S.editStaff||newId("st");
@@ -750,7 +894,7 @@ document.addEventListener("submit",async e=>{
 });
 addEventListener("hashchange",()=>{window.scrollTo(0,0);render()});
 setInterval(()=>{if(cur()==="overview"&&!document.querySelector("dialog[open]")&&document.activeElement?.id!=="q")render()},60000);
-render();boot();
+S.config=normalizeConfig(null);applyConfig();render();boot();
 </script>
 
 </body>
