@@ -396,6 +396,22 @@ function supaLogin(){
     if(error){msg.style.color="var(--bad)";msg.textContent=/rate/i.test(error.message)?"طلبات كثيرة خلال وقت قصير. انتظر دقيقة ثم حاول مجدداً.":"تعذّر إرسال الرابط. تأكد من البريد وحاول مرة أخرى."}
     else{msg.style.color="var(--ok)";msg.textContent=`أرسلنا رابط الدخول إلى ${em}. افتحه من نفس الجهاز والمتصفح.`}};
   dlg.showModal();setTimeout(()=>$("#lg-email")?.focus(),50)}
+function pendingLocal(){
+  if(!supaOn()||!S.role)return null;let L={};try{if(localStorage.getItem("outreach-migrated"))return null;L=JSON.parse(localStorage.getItem(LS)||"{}")}catch(e){return null}
+  const same=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
+  const diff=col=>(L[col]||[]).filter(r=>{const x=S[col].find(y=>y.id===r.id);return !x||!same({...x,id:0},{...r,id:0})});
+  const ops=diff("ops"),staff=diff("staff");if(!ops.length&&!staff.length)return null;
+  const ids=new Set([...(L.ops||[]).map(r=>"ops:"+r.id),...(L.staff||[]).map(r=>"staff:"+r.id)]);
+  const extra=[...S.ops.map(r=>["ops",r]),...S.staff.map(r=>["staff",r])].filter(([c,r])=>!ids.has(c+":"+r.id));
+  return {ops,staff,all:L,extra}}
+async function migrateLocal(replace){
+  const m=pendingLocal();if(!m)return;let n=0;
+  for(const col of ["staff","ops"])for(const r of m[col]){const {id,...b}=r;if(await put(col,id,b))n++}
+  let d=0;if(replace&&S.admin)for(const [c,r] of m.extra){if(await del(c,r.id))d++}
+  try{localStorage.setItem("outreach-migrated",new Date().toISOString())}catch(e){}
+  toast(`نُقل ${n} سجل إلى قاعدة البيانات${d?` وحُذف ${d} سجل غير موجود في نسختك`:""}`);render()}
+function migrateBanner(){const m=pendingLocal();if(!m)return "";
+  return `<div class="banner localbar"><span>في هذا المتصفح بيانات من النسخة السابقة غير موجودة في قاعدة البيانات المشتركة: ${m.staff.length} كادر و${m.ops.length} عملية.</span><span class="filters"><button class="btn sm primary" data-act="migrate">نقلها للقاعدة المشتركة</button>${S.admin&&m.extra.length?`<button class="btn sm" data-act="migrate-replace" title="يحذف من القاعدة ما ليس في نسخة هذا المتصفح">نقلها واعتماد نسختي فقط (حذف ${m.extra.length})</button>`:""}<button class="btn sm" data-act="migrate-skip">تجاهل</button></span></div>`}
 function membersPanel(){
   if(!supaOn())return "";
   const rows=(S.members||[]).map(m=>`<tr><td dir="ltr" style="text-align:right" class="mono">${esc(m.email)}</td><td>${esc(m.name||"")}</td><td>${m.role==="admin"?"مشرف":"عضو فريق"}</td>
@@ -586,6 +602,7 @@ function topbar(key,title,sub){
   <span class="today">${fmtDay(d)} · <span class="mono">${iso(d)}</span></span>${addBtn()}</div></div>
   ${S.mode==="local"?`<div class="banner localbar"><span>البيانات محفوظة على هذا المتصفح فقط. نزّل نسخة احتياطية بانتظام، واستعدها على أي جهاز آخر لنقل البيانات.</span><span class="filters"><button class="btn sm" data-act="backup">تنزيل نسخة احتياطية</button><label class="btn sm" for="restoreFile">استعادة من ملف</label><input id="restoreFile" type="file" accept=".json,application/json" hidden></span></div>`:""}
   ${S.readOnly?`<div class="banner">${supaOn()?(S.user?"بريدك غير مضاف للفريق بعد، لذلك تستطيع العرض فقط. اطلب من المشرف إضافتك.":`أنت تتصفح للعرض فقط. <button class="linkbtn" data-act="login">سجّل الدخول</button> لإضافة العمليات وتعديلها.`):'صلاحيتك للعرض فقط. اطلب من صاحب الصفحة صلاحية "مساهم" لتعديل العمليات.'}</div>`:""}
+  ${migrateBanner()}
   ${S.mode==="supa-err"?`<div class="banner">تعذّر الاتصال بقاعدة البيانات. تحقق من الإنترنت ثم أعد تحميل الصفحة.</div>`:""}`}
 
 function opsTable(list,{compact}={}){
@@ -921,6 +938,8 @@ document.addEventListener("click",async e=>{
     if(act==="wk"){S.f.weekOffset=a.dataset.d==="0"?0:S.f.weekOffset+Number(a.dataset.d);render()}
     if(act==="admin-toggle"&&supaOn()){if(S.user){await sb.auth.signOut();toast("سجّلت الخروج")}else supaLogin();return}
     if(act==="login"){supaLogin();return}
+    if(act==="migrate"||act==="migrate-replace"){a.disabled=true;await migrateLocal(act==="migrate-replace");return}
+    if(act==="migrate-skip"){try{localStorage.setItem("outreach-migrated","skipped")}catch(e){}render();return}
     if(act==="mem-ask"){S.confirmMem=a.dataset.email;render();return}
     if(act==="mem-del"){S.confirmMem=null;const {error}=await sb.from("members").delete().eq("email",a.dataset.email);if(error)toast(supaErr(error));else{toast("أُزيل "+a.dataset.email);supaMembers()}return}
     if(act==="mem-role"){const {error}=await sb.from("members").update({role:a.dataset.role}).eq("email",a.dataset.email);if(error)toast(supaErr(error));else{toast("تغيّرت الصلاحية");supaMembers()}return}
