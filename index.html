@@ -398,7 +398,7 @@ function supaLogin(){
   dlg.showModal();setTimeout(()=>$("#lg-email")?.focus(),50)}
 function pendingLocal(){
   if(!supaOn()||!S.role)return null;let L={};try{if(localStorage.getItem("outreach-migrated"))return null;L=JSON.parse(localStorage.getItem(LS)||"{}")}catch(e){return null}
-  const same=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
+  const canon=v=>Array.isArray(v)?"["+v.map(canon).join(",")+"]":v&&typeof v==="object"?"{"+Object.keys(v).sort().map(k=>JSON.stringify(k)+":"+canon(v[k])).join(",")+"}":JSON.stringify(v);const same=(a,b)=>canon(a)===canon(b);
   const diff=col=>(L[col]||[]).filter(r=>{const x=S[col].find(y=>y.id===r.id);return !x||!same({...x,id:0},{...r,id:0})});
   const ops=diff("ops"),staff=diff("staff");if(!ops.length&&!staff.length)return null;
   const ids=new Set([...(L.ops||[]).map(r=>"ops:"+r.id),...(L.staff||[]).map(r=>"staff:"+r.id)]);
