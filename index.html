@@ -313,8 +313,8 @@ const ST=Object.fromEntries(STATUSES);
 const ACTIVE=["Departed","OnSite","Returning"];
 const SERVICES=[["Health + Nutrition","صحية وتغذوية"],["Health","صحية فقط"],["Nutrition","تغذية"],["Immunization","تطعيمات"],["MHPSS","دعم نفسي واجتماعي"]];
 const SV=Object.fromEntries(SERVICES);
-const ROLES=[["Doctor","طبيب"],["Nurse","ممرض/ة"],["Midwife","قابلة قانونية"],["Nutrition Officer","أخصائي تغذية"],["CHNP","CHNP"],["Team Leader","قائد فريق"],["Data Collector","مدخل بيانات"],["Support Staff","دعم لوجستي"]];
-const RL=Object.fromEntries(ROLES);
+const ROLES=[["Doctor","طبيب"],["Nurse","ممرض/ة"],["Midwife","قابلة قانونية"],["Nutrition Officer","أخصائي تغذية"],["CHP","CHP"],["Help desk","Help desk"],["Team Leader","قائد فريق"],["Data Collector","مدخل بيانات"],["Support Staff","دعم لوجستي"]];
+const RL={...Object.fromEntries(ROLES),CHNP:"CHP"};
 const DAYS=["الأحد","الإثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"];
 let CLINICS=DEF_CLINICS,POINTS=DEF_POINTS;
 const clinic=id=>CLINICS.find(c=>c.id===id)||{ar:"—",c:"--muted"};
@@ -709,12 +709,12 @@ function vPoints(){
 
 function vStaff(){
   const f=S.f,e=S.editStaff?S.staff.find(s=>s.id===S.editStaff):null;
-  const list=S.staff.filter(s=>(!f.stClinic||s.clinic===f.stClinic)&&(!f.stRole||s.role===f.stRole)&&(!f.q||s.name.includes(f.q))).sort((a,b)=>a.name.localeCompare(b.name,"ar"));
+  const list=S.staff.filter(s=>(!f.stClinic||s.clinic===f.stClinic)&&(!f.stRole||s.role===f.stRole||(f.stRole==="CHP"&&s.role==="CHNP"))&&(!f.q||s.name.includes(f.q))).sort((a,b)=>a.name.localeCompare(b.name,"ar"));
   return topbar("staff","الكوادر","أضف الكوادر وحدّد عيادة كل منهم ليظهروا عند اختيار فريق أي عملية.")+`
   ${canWrite()?`<section class="panel"><div class="panel-h"><h2>${e?"تعديل بيانات "+esc(e.name):"إضافة سريعة لكادر"}</h2><p>يظهر فوراً في القائمة ولكل الفريق</p></div>
   <form class="panel-b quick" id="staffForm">
     <div class="field name"><label for="sf-name">الاسم *</label><input id="sf-name" required value="${esc(e?.name||"")}" placeholder="الاسم الكامل"></div>
-    <div class="field"><label for="sf-role">المسمى</label><select id="sf-role">${opts(ROLES,e?.role||"CHNP")}</select></div>
+    <div class="field"><label for="sf-role">المسمى</label><select id="sf-role">${opts(ROLES,e?.role==="CHNP"?"CHP":(e?.role||"CHP"))}</select></div>
     <div class="field"><label for="sf-clinic">العيادة</label><select id="sf-clinic">${clinicOpts(e?.clinic||f.stClinic||"CLN-001")}</select></div>
     <div class="field"><label for="sf-phone">الهاتف</label><input id="sf-phone" type="tel" dir="ltr" value="${esc(e?.phone||"")}" placeholder="059xxxxxxx"></div>
     <div class="filters"><button class="btn primary">${e?"حفظ":"إضافة"}</button>${e?`<button type="button" class="btn" data-act="cancel-staff">إلغاء</button>`:""}</div>
