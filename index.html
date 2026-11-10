@@ -274,42 +274,39 @@ dialog::backdrop{background:rgba(10,20,20,.45)}
 <script>
 /* ---------- reference data (organisation config) ---------- */
 const DEF_CLINICS=[
- {id:"CLN-001",ar:"عيادة عايدية",en:"Aaydia Clinic",area:"شمال غرب غزة - الشاطئ",mgr:"د. أحمد عابد",c:"--c1",frame:"أزرق"},
- {id:"CLN-002",ar:"عيادة الطيارة",en:"Al Tayara Clinic",area:"الوسطى - دير البلح",mgr:"د. تهاني سمرة",c:"--c2",frame:"أحمر"},
- {id:"CLN-003",ar:"عيادة التوبة",en:"Al Tawba Clinic",area:"الوسطى - دير البلح",mgr:"د. محمد عيد",c:"--c3",frame:"أخضر"},
- {id:"CLN-004",ar:"عيادة الآثار",en:"Al Athar Clinic",area:"الوسطى - دير البلح الساحلي",mgr:"د. ربا أبو شعر",c:"--c4",frame:"برتقالي"},
- {id:"CLN-005",ar:"عيادة المعسكر",en:"Al Moaskar Clinic",area:"الوسطى - مخيم دير البلح",mgr:"د. عبدالله أبو شمالة",c:"--c5",frame:"بنفسجي"},
- {id:"CLN-006",ar:"عيادة العقاد",en:"Al Aqqad Clinic",area:"جنوب - خانيونس المواصي",mgr:"د. كرم ماضي",c:"--c6",frame:"وردي"},
- {id:"CLN-007",ar:"عيادة الحساينة",en:"Al-Hasayna Clinic",area:"الوسطى - غرب النصيرات",mgr:"د. شرف الدين الصرفندي",c:"--c7",frame:"تركوازي"}];
+ {id:"CLN-001",lat:31.52633,lon:34.44563,ar:"عيادة عايدية",en:"Aaydia Clinic",area:"شمال غرب غزة - الشاطئ",mgr:"د. أحمد عابد",c:"--c1",frame:"أزرق"},
+ {id:"CLN-002",lat:31.417508,lon:34.354585,ar:"عيادة الطيارة",en:"Al Tayara Clinic",area:"الوسطى - دير البلح",mgr:"د. تهاني سمرة",c:"--c2",frame:"أحمر"},
+ {id:"CLN-003",lat:31.41862,lon:34.340928,ar:"عيادة التوبة",en:"Al Tawba Clinic",area:"الوسطى - دير البلح",mgr:"د. محمد عيد",c:"--c3",frame:"أخضر"},
+ {id:"CLN-004",lat:31.41795,lon:34.33255,ar:"عيادة الآثار",en:"Al Athar Clinic",area:"الوسطى - دير البلح الساحلي",mgr:"د. ربا أبو شعر",c:"--c4",frame:"برتقالي"},
+ {id:"CLN-005",lat:31.42397542,lon:34.34067793,ar:"عيادة المعسكر",en:"Al Moaskar Clinic",area:"الوسطى - مخيم دير البلح",mgr:"د. عبدالله أبو شمالة",c:"--c5",frame:"بنفسجي"},
+ {id:"CLN-006",lat:31.366924,lon:34.273689,ar:"عيادة العقاد",en:"Al Aqqad Clinic",area:"جنوب - خانيونس المواصي",mgr:"د. كرم ماضي",c:"--c6",frame:"وردي"},
+ {id:"CLN-007",lat:31.45335,lon:34.37711,ar:"عيادة الحساينة",en:"Al-Hasayna Clinic",area:"الوسطى - غرب النصيرات",mgr:"د. شرف الدين الصرفندي",c:"--c7",frame:"تركوازي"}];
 const PT_TYPES={Camp:"مخيم نزوح",Shelter:"مركز إيواء",Community:"منطقة مجتمعية",Distribution:"نقطة توزيع",Mobile:"نقطة عيادة متنقلة"};
-const P=(id,ar,en,addr,cl,type,visits,lat,lon)=>({id:"LOC-"+String(id).padStart(3,"0"),ar,en,addr,clinic:"CLN-00"+cl,type,visits,lat,lon});
+const P=(id,ar,en,addr,cl,type,visits,lat,lon,note="")=>({id:"LOC-"+String(id).padStart(3,"0"),ar,en,addr,clinic:"CLN-00"+cl,type,visits,lat,lon,note});
 const DEF_POINTS=[
- P(1,"مخيم الكرامة","AL Karama Camp","غرب غزة - الشاطئ - بالقرب من مخازن الغذاء العالمي",1,"Camp",16,31.5319,34.4405),
- P(2,"مخيم الجزيرة","Al Jazeera Camp","ميناء أبو حصيرة – فندق الجزيرة",1,"Camp",12,31.5299,34.4388),
- P(3,"مخيم شراب","Sharab Camp","أرض شراب – خلف مستشفى الأقصى",2,"Camp",14,31.4206,34.3599),
- P(4,"مخيم نوى","Nawa Camp","أرض نوى خلف عيادة الطيارة شرقاً",2,"Camp",19,31.4152,34.3595),
- P(5,"مخيم أبو جميزة","Abu Jumayza Camp","دير البلح شارع البيئة",3,"Camp",22,31.4157,34.3413),
- P(6,"مخيم الهدى قباجة","Al-Huda Kabaja Camp","دير البلح في محيط عيادة التوبة",3,"Camp",18,31.4213,34.3409),
- P(7,"مخيم التوبة","Al Tawba Camp","دير البلح في محيط عيادة التوبة",3,"Camp",24,31.4192,34.3407),
- P(8,"منطقة الآثار","Al Athar Area","محيط عيادة الآثار",4,"Distribution",20,31.4190,34.3313),
- P(9,"مخيم السلام","Al Salam Camp","دير البلح شارع البحر أرض فياض مقابل استراحة الجزيرة",4,"Camp",25,31.4155,34.3310),
- P(10,"مخيم النجوم","Al Nojoom Camp","مقابل مبنى الصليب الأحمر",4,"Camp",15,31.4192,34.3331),
- P(11,"مخيم ريفيرا","Rivera Camp","دير البلح شارع الرشيد",4,"Camp",17,31.4168,34.3287),
- P(12,"آبار التحلية","Abar Al Tahlya","دير البلح آبار التحلية",4,"Community",13,31.3992,34.3075),
- P(13,"مخيم النخيل","Al-Nakhil Camp","دير البلح مفترق النخيل",5,"Camp",21,31.4235,34.3424),
- P(14,"مخيم زهور الأمل","Zuhour Al-Amal Camp","دير البلح",5,"Camp",16,31.4235,34.3375),
- P(15,"مخيم الزهراء","Al-Zahra Camp","دير البلح بجوار مسجد فاطمة الزهراء",5,"Camp",18,31.4225,34.3377),
- P(16,"مخيم الهلال","Al-Hilal Camp","دير البلح بجانب مبنى الهلال",5,"Camp",23,31.4219,34.3424),
- P(17,"مخيم ابن تيمية","Ibn Taymiyya Camp","دير البلح - المعسكر",5,"Camp",26,31.4249,34.3416),
- P(18,"منطقة العقاد","Al Aqqad Area","محيط عيادة العقاد",6,"Community",22,31.3667,34.2734),
- P(19,"مخيم الأنوار","Al Anwar Camp","نقطة الموبايل كلينك",6,"Mobile",14,31.3668,34.2745),
- P(20,"مركز إيواء جرار القدوة","Jarar al qedwa Shelter","مواصي خانيونس",6,"Shelter",17,31.3669,34.2766),
- P(21,"مخيم ناهل اللحام","Nahil Al-Lahham Camp","مواصي خانيونس",6,"Camp",19,31.3645,34.2739),
- P(22,"مخيم الشاطئ \"النص\"","Al-Shati Camp \"Al-Nus\"","مواصي خانيونس – الشاطئ (النص)",6,"Camp",24,31.3666,34.2704),
- P(23,"مخيم أبو حسين","Abu al-Hussein camp","النصيرات أرض أبو مهادي",7,"Camp",15,31.4577,34.3740),
- P(24,"مخيم الحساينة","Al-Hasayna camp","النصيرات منطقة الحساينة",7,"Camp",20,31.4528,34.3790),
- P(25,"مخيم النويري حية","Al-Nuwairi Hayyah camp","النصيرات منطقة النويري",7,"Camp",13,31.4579,34.3763),
- P(26,"مخيم النويري","Al-Nuwairi camp","النصيرات - منطقة النويري بجوار شاليه سي بتيش",7,"Camp",18,31.4575,34.3708)];
+ P(1,"مخيم الكرامة","AL Karama Camp","غرب غزة - الشاطئ - بالقرب من مخازن الغذاء العالمي",1,"Camp",16,31.531867,34.440548),
+ P(2,"مخيم الجزيرة","Al Jazeera Camp","ميناء أبو حصيرة – فندق الجزيرة",1,"Camp",12,31.529944,34.438792),
+ P(3,"إيواء شراب","SHUBAR Shelter","أرض شراب – خلف مستشفى الأقصى",2,"Shelter",14,31.420624,34.3599446,"خيمة بروجكت هوب"),
+ P(4,"مخيم نوى","Nawa Camp","أرض نوى خلف عيادة الطيارة شرقاً",2,"Camp",19,31.4151692,34.3595466),
+ P(5,"مخيم أبو جميزة","Abu Jumayza Camp","دير البلح شارع البيئة",3,"Camp",22,31.41567,34.341251),
+ P(6,"مخيم الهدى قباجة","Al-Huda Kabaja Camp","دير البلح في محيط عيادة التوبة",3,"Camp",18,31.421335,34.340866),
+ P(7,"مخيم التوبة","Al Tawba Camp","دير البلح في محيط عيادة التوبة",3,"Camp",24,31.41924,34.34069),
+ P(27,"مخيم العودة","Alawda Camp","محيط عيادة الآثار",4,"Camp",0,31.41557,34.33154,"خيمة بروجكت هوب"),
+ P(9,"مخيم السلام","Al Salam Camp","دير البلح شارع البحر أرض فياض مقابل استراحة الجزيرة",4,"Camp",25,31.41547,34.330998),
+ P(11,"مخيم ريفيرا","Rivera Camp","دير البلح شارع الرشيد",4,"Camp",17,31.41683,34.32872),
+ P(12,"آبار التحلية","Abar Al Tahlya","دير البلح آبار التحلية",4,"Community",13,31.3992329,34.3074936),
+ P(13,"مخيم النخيل","Al-Nakhil Camp","دير البلح مفترق النخيل",5,"Camp",21,31.4235,34.342389),
+ P(14,"مخيم زهور الأمل","Zuhour Al-Amal Camp","",5,"Camp",16,31.423543,34.337521),
+ P(15,"مخيم الزهراء","Al-Zahra Camp","دير البلح بجوار مسجد فاطمة الزهراء",5,"Camp",18,31.422528,34.337694),
+ P(17,"مخيم ابن تيمية","Ibn Taymiyya Camp","دير البلح - المعسكر",5,"Camp",26,31.424929,34.341623),
+ P(28,"مخيم الفجر","Alfajer Camp","مواصي خانيونس",6,"Camp",0,31.369782,34.276863),
+ P(20,"مركز إيواء جرار القدوة","Jarar al qedwa Shelter","مواصي خانيونس",6,"Shelter",17,31.366914,34.276638),
+ P(21,"مخيم ناهل اللحام","Nahil Al-Lahham Camp","مواصي خانيونس",6,"Camp",19,31.364485,34.273857),
+ P(23,"مخيم أبو حسين","Abu al-Hussein camp","النصيرات أرض أبو مهادي",7,"Camp",15,31.4576956,34.3740017),
+ P(24,"مخيم الحساينة","Al-Hasayna camp","النصيرات منطقة الحساينة",7,"Camp",20,31.452784,34.378963),
+ P(25,"مخيم النويري حية","Al-Nuwairi Hayyah camp","النصيرات منطقة النويري",7,"Camp",13,31.4579074,34.3763039),
+ P(26,"مخيم النويري","Al-Nuwairi camp","النصيرات - منطقة النويري بجوار شاليه سي بتيش",7,"Camp",18,31.4575485,34.3707705)];
+const POINTS_VER=2,OLD_POINT_IDS=Array.from({length:26},(_,i)=>"LOC-"+String(i+1).padStart(3,"0"));
 const STATUSES=[["Planned","مخططة"],["Ready","جاهزة"],["Departed","غادرت"],["OnSite","في الموقع"],["Returning","في طريق العودة"],["Completed","مكتملة"],["Delayed","متأخرة"],["OnHold","مؤجلة"]];
 const ST=Object.fromEntries(STATUSES);
 const ACTIVE=["Departed","OnSite","Returning"];
@@ -396,11 +393,14 @@ const LABELS=[
  ["nav.overview","القائمة: نظرة عامة","نظرة عامة"],["nav.ops","القائمة: العمليات","العمليات"],["nav.week","القائمة: الخطة الأسبوعية","الخطة الأسبوعية"],["nav.clinics","القائمة: العيادات","العيادات"],["nav.points","القائمة: النقاط","النقاط والمخيمات"],["nav.staff","القائمة: الكوادر","الكوادر الميدانية"],["nav.reports","القائمة: التقارير","التقارير"]];
 const LDEF=Object.fromEntries(LABELS.map(([k,,d])=>[k,d]));
 const T=k=>{const v=(S.config.labels||{})[k];return v!=null&&String(v).trim()!==""?v:LDEF[k]};
-function normalizeConfig(c){c=c||{};return {labels:c.labels||{},clinics:Array.isArray(c.clinics)&&c.clinics.length?c.clinics:DEF_CLINICS,points:Array.isArray(c.points)?c.points:DEF_POINTS,adminHash:c.adminHash||null}}
+function normalizeConfig(c){c=c||{};let points=Array.isArray(c.points)?c.points:DEF_POINTS,clinics=Array.isArray(c.clinics)&&c.clinics.length?c.clinics:DEF_CLINICS;
+  if(Array.isArray(c.points)&&(c.pointsVer||1)<POINTS_VER){const custom=c.points.filter(p=>!OLD_POINT_IDS.includes(p.id)&&!DEF_POINTS.some(d=>d.id===p.id));points=[...DEF_POINTS,...custom];
+    clinics=clinics.map(k=>{const d=DEF_CLINICS.find(x=>x.id===k.id);return d&&(k.lat==null||k.lat==="")?{...k,lat:d.lat,lon:d.lon}:k})}
+  return {labels:c.labels||{},clinics,points,adminHash:c.adminHash||null,pointsVer:POINTS_VER}}
 function applyConfig(){CLINICS=S.config.clinics;POINTS=S.config.points;document.title=T("siteName");const b=$("#brandName"),s=$("#brandSub");if(b)b.textContent=T("siteName");if(s)s.textContent=T("siteSub")}
 async function saveConfig(next){
   const cfg=normalizeConfig({...S.config,...next});
-  if(db){try{await db.doc("settings/config").set(JSON.parse(JSON.stringify({labels:cfg.labels,clinics:cfg.clinics,points:cfg.points})))}catch(e){toast(e&&e.code==="invalid_argument"?"تعديل الإعدادات متاح للمشرف فقط.":errMsg(e));return false}}
+  if(db){try{await db.doc("settings/config").set(JSON.parse(JSON.stringify({labels:cfg.labels,clinics:cfg.clinics,points:cfg.points,pointsVer:POINTS_VER})))}catch(e){toast(e&&e.code==="invalid_argument"?"تعديل الإعدادات متاح للمشرف فقط.":errMsg(e));return false}}
   S.config=cfg;applyConfig();if(!db){try{localStorage.setItem(LSC,JSON.stringify(cfg))}catch(e){}}render();return true}
 const cv=c=>!c?"var(--muted)":String(c).startsWith("--")?`var(${c})`:c;
 const hexOf=c=>String(c||"").startsWith("--")?(getComputedStyle(document.documentElement).getPropertyValue(c).trim()||"#005EB8"):(c||"#005EB8");
@@ -435,12 +435,12 @@ function vAdmin(){
     <div class="filters">${S.mode==="local"?`<button class="btn" data-act="admin-pass">تغيير كلمة المرور</button>`:""}${S.mode==="local"?`<button class="btn" data-act="admin-out">خروج من وضع المشرف</button>`:""}</div></div>
   <section class="panel"><div class="panel-h"><div><h2>العيادات (${CLINICS.length})</h2><p>حذف العيادة متاح بعد نقل نقاطها لعيادة أخرى</p></div><button class="btn primary sm" data-act="ent-new" data-kind="clinic">+ إضافة عيادة</button></div>
     <div class="tbl-wrap"><table><thead><tr><th>العيادة</th><th>المنطقة</th><th>المدير</th><th>الهاتف</th><th>النقاط</th><th></th></tr></thead><tbody>
-    ${CLINICS.map(c=>`<tr><td><span class="clin" style="--cc:${cv(c.c)}"><b>${esc(c.ar)}</b></span><span class="sub" dir="ltr" style="text-align:right">${esc(c.en||"")}</span></td><td>${esc(c.area||"")}</td><td>${esc(c.mgr||"")}</td><td class="mono">${esc(c.phone||"—")}</td><td class="num">${cnt(c.id)}</td>
+    ${CLINICS.map(c=>`<tr><td><span class="clin" style="--cc:${cv(c.c)}"><b>${esc(c.ar)}</b></span><span class="sub" dir="ltr" style="text-align:right">${esc(c.en||"")}</span></td><td>${esc(c.area||"")}${c.lat!==""&&c.lat!=null?`<span class="sub"><a class="mono" href="${mapsUrl(c.lat,c.lon)}" target="_blank" rel="noopener">${(+c.lat).toFixed(5)}, ${(+c.lon).toFixed(5)}</a></span>`:""}</td><td>${esc(c.mgr||"")}</td><td class="mono">${esc(c.phone||"—")}</td><td class="num">${cnt(c.id)}</td>
     <td><div class="filters" style="flex-wrap:nowrap"><button class="btn sm" data-act="ent-edit" data-kind="clinic" data-id="${esc(c.id)}">تعديل</button>${delBtn("clinic",c.id)}</div></td></tr>`).join("")}
     </tbody></table></div></section>
   <section class="panel"><div class="panel-h"><div><h2>النقاط والمخيمات (${POINTS.length})</h2><p>لكل نقطة إحداثيات يمكن فتحها مباشرة في خرائط Google</p></div><button class="btn primary sm" data-act="ent-new" data-kind="point">+ إضافة نقطة</button></div>
     <div class="tbl-wrap"><table><thead><tr><th>النقطة</th><th>العيادة</th><th>النوع</th><th>الإحداثيات</th><th></th></tr></thead><tbody>
-    ${POINTS.map(p=>`<tr><td><b>${esc(p.ar)}</b><span class="sub">${esc(p.addr||"")}</span></td><td>${clin(p.clinic)}</td><td>${esc(PT_TYPES[p.type]||p.type)}</td>
+    ${POINTS.map(p=>`<tr><td><b>${esc(p.ar)}</b>${p.note?` <span class="chip s-Ready" style="font-size:11px">${esc(p.note)}</span>`:""}<span class="sub">${esc(p.addr||"")}</span></td><td>${clin(p.clinic)}</td><td>${esc(PT_TYPES[p.type]||p.type)}</td>
     <td>${p.lat!=null&&p.lon!=null&&p.lat!==""?`<a class="mono" href="${mapsUrl(p.lat,p.lon)}" target="_blank" rel="noopener">${(+p.lat).toFixed(5)}, ${(+p.lon).toFixed(5)}</a>`:'<span class="muted">بدون إحداثيات</span>'}</td>
     <td><div class="filters" style="flex-wrap:nowrap"><button class="btn sm" data-act="ent-edit" data-kind="point" data-id="${esc(p.id)}">تعديل</button>${delBtn("point",p.id)}</div></td></tr>`).join("")}
     </tbody></table></div></section>
@@ -454,10 +454,11 @@ function editEntity(kind,id){
   const isNew=!id,list=kind==="clinic"?CLINICS:POINTS;
   const r=isNew?(kind==="clinic"?{id:"CLN-"+Date.now().toString(36).toUpperCase(),ar:"",en:"",area:"",mgr:"",phone:"",frame:"",c:"#005EB8"}:{id:"LOC-"+Date.now().toString(36).toUpperCase(),ar:"",en:"",addr:"",clinic:CLINICS[0]?.id||"",type:"Camp",visits:0,lat:"",lon:""}):{...list.find(x=>x.id===id)};
   const f=(k,l,v,attrs="")=>`<div class="field"><label for="e-${k}">${l}</label><input id="e-${k}" value="${esc(v??"")}" ${attrs}></div>`;
-  const body=kind==="clinic"?`${f("ar","اسم العيادة *",r.ar,"required")}${f("en","الاسم بالإنجليزية",r.en,'dir="ltr"')}${f("area","المنطقة",r.area)}${f("mgr","مدير العيادة",r.mgr)}${f("phone","هاتف الاتصال",r.phone,'type="tel" dir="ltr"')}${f("frame","لون الإطار (اسم)",r.frame,'placeholder="مثال: أزرق"')}
+  const body=kind==="clinic"?`${f("ar","اسم العيادة *",r.ar,"required")}${f("en","الاسم بالإنجليزية",r.en,'dir="ltr"')}${f("area","المنطقة",r.area)}${f("mgr","مدير العيادة",r.mgr)}${f("phone","هاتف الاتصال",r.phone,'type="tel" dir="ltr"')}${f("frame","لون الإطار (اسم)",r.frame,'placeholder="مثال: أزرق"')}${f("lat","خط العرض (Latitude)",r.lat,'dir="ltr" inputmode="decimal"')}${f("lon","خط الطول (Longitude)",r.lon,'dir="ltr" inputmode="decimal"')}
      <div class="field"><label for="e-c">لون العيادة على الموقع</label><input id="e-c" type="color" value="${esc(hexOf(r.c))}" style="height:38px;padding:3px"></div>`
    :`${f("ar","اسم النقطة *",r.ar,"required")}${f("en","الاسم بالإنجليزية",r.en,'dir="ltr"')}
      <div class="field full"><label for="e-addr">العنوان</label><input id="e-addr" value="${esc(r.addr||"")}"></div>
+     <div class="field full"><label for="e-note">ملاحظة</label><input id="e-note" value="${esc(r.note||"")}" placeholder="مثال: خيمة بروجكت هوب"></div>
      <div class="field"><label for="e-clinic">العيادة المشرفة</label><select id="e-clinic">${clinicOpts(r.clinic)}</select></div>
      <div class="field"><label for="e-type">نوع الموقع</label><select id="e-type">${opts(Object.entries(PT_TYPES),r.type)}</select></div>
      <div class="coordbox full"><div class="ttl">الإحداثيات</div>
@@ -476,11 +477,11 @@ function editEntity(kind,id){
   form.onsubmit=async e=>{e.preventDefault();const g=k=>($("#e-"+k)?.value??"").trim();
     if(!g("ar")){$("#e-ar").focus();return}
     let rec;
-    if(kind==="clinic")rec={...r,ar:g("ar"),en:g("en"),area:g("area"),mgr:g("mgr"),phone:g("phone"),frame:g("frame"),c:g("c")||"#005EB8"};
+    if(kind==="clinic"){const la=g("lat"),lo=g("lon");rec={...r,ar:g("ar"),en:g("en"),area:g("area"),mgr:g("mgr"),phone:g("phone"),frame:g("frame"),c:g("c")||"#005EB8",lat:la===""?"":parseFloat(la),lon:lo===""?"":parseFloat(lo)};if((la==="")!==(lo==="")||(la!==""&&!(isFinite(rec.lat)&&isFinite(rec.lon)))){toast("أدخل خط العرض وخط الطول معاً بأرقام صحيحة.");return}}
     else{const la=g("lat"),lo=g("lon");const lat=la===""?"":parseFloat(la),lon=lo===""?"":parseFloat(lo);
       if((la!==""&&!(lat>=-90&&lat<=90))||(lo!==""&&!(lon>=-180&&lon<=180))){toast("الإحداثيات غير صحيحة. خط العرض بين -90 و90، وخط الطول بين -180 و180.");return}
       if((la==="")!==(lo==="")){toast("أدخل خط العرض وخط الطول معاً.");return}
-      rec={...r,ar:g("ar"),en:g("en"),addr:g("addr"),clinic:g("clinic"),type:g("type"),visits:Math.max(0,parseInt(g("visits"),10)||0),lat,lon};
+      rec={...r,ar:g("ar"),en:g("en"),addr:g("addr"),note:g("note"),clinic:g("clinic"),type:g("type"),visits:Math.max(0,parseInt(g("visits"),10)||0),lat,lon};
       if(lat!==""&&!(lat>31.2&&lat<31.65&&lon>34.15&&lon<34.6))toast("تنبيه: الإحداثيات خارج قطاع غزة، تأكد منها.")}
     const arr=list.slice();const i=arr.findIndex(x=>x.id===rec.id);if(i>=0)arr[i]=rec;else arr.push(rec);
     if(await saveConfig(kind==="clinic"?{clinics:arr}:{points:arr})){dlg.close();toast(isNew?"أُضيفت "+rec.ar:"حُفظت "+rec.ar)}};
@@ -599,7 +600,7 @@ function vClinics(){
   <div class="cards">${CLINICS.map(c=>{const pts=POINTS.filter(p=>p.clinic===c.id),st=S.staff.filter(s=>s.clinic===c.id).length,ops=S.ops.filter(o=>o.clinic===c.id).length;return `<article class="card" style="--cc:${cv(c.c)}">
     <div><h3>${esc(c.ar)}</h3><div class="en">${esc(c.en)}</div></div>
     <div class="trio"><div><b>${pts.length}</b><span>نقاط تابعة</span></div><div><b>${st}</b><span>كوادر</span></div><div><b>${ops}</b><span>عمليات</span></div></div>
-    <dl class="kv"><dt>المنطقة</dt><dd>${esc(c.area)}</dd><dt>المدير</dt><dd>${esc(c.mgr)}</dd><dt>الإطار</dt><dd>${c.frame}</dd><dt>النقاط</dt><dd>${pts.map(p=>esc(p.ar)).join("، ")}</dd></dl>
+    <dl class="kv"><dt>المنطقة</dt><dd>${esc(c.area)}</dd><dt>المدير</dt><dd>${esc(c.mgr)}</dd><dt>الإطار</dt><dd>${esc(c.frame||"—")}</dd><dt>الموقع</dt><dd>${c.lat!==""&&c.lat!=null?`<a class="mono" href="${mapsUrl(c.lat,c.lon)}" target="_blank" rel="noopener">${(+c.lat).toFixed(5)}, ${(+c.lon).toFixed(5)}</a>`:"—"}</dd><dt>النقاط</dt><dd>${pts.map(p=>esc(p.ar)).join("، ")}</dd></dl>
     ${canWrite()?`<button class="btn sm" data-act="new-op" data-clinic="${c.id}">إضافة عملية لهذه العيادة</button>`:""}</article>`}).join("")}</div>`}
 
 function mapSVG(pts){
@@ -609,7 +610,8 @@ function mapSVG(pts){
   const grid=[0.2,0.4,0.6,0.8].map(t=>+(la[0]+t*(la[1]-la[0])).toFixed(2)).map(v=>`<line x1="${m}" x2="${W-m}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)" stroke-dasharray="3 4"/><text x="${W-m+4}" y="${y(v)+4}" font-size="10" fill="var(--muted)" font-family="IBM Plex Mono,monospace">${v.toFixed(2)}°N</text>`).join("");
   const labels=[["غزة",31.52,34.415],["دير البلح",31.405,34.335],["النصيرات",31.468,34.37],["خانيونس المواصي",31.352,34.285]].map(([t,a,b])=>`<text x="${x(b)}" y="${y(a)}" font-size="12" fill="var(--muted)" font-family="IBM Plex Sans Arabic,sans-serif" text-anchor="middle">${t}</text>`).join("");
   return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="مواقع النقاط حسب الإحداثيات">${grid}${labels}
-   <text x="${m}" y="${m-12}" font-size="11" fill="var(--muted)" font-family="IBM Plex Sans Arabic,sans-serif">↑ شمال · الغرب يسار (جهة البحر)</text>
+   <text x="${m}" y="${m-12}" font-size="11" fill="var(--muted)" font-family="IBM Plex Sans Arabic,sans-serif">↑ شمال · الغرب يسار (جهة البحر) · ▢ العيادة · ● المخيم</text>
+   ${CLINICS.filter(c=>c.lat!==""&&c.lat!=null&&isFinite(+c.lat)).map(c=>`<rect x="${(x(+c.lon)-6).toFixed(1)}" y="${(y(+c.lat)-6).toFixed(1)}" width="12" height="12" rx="2" fill="var(--surface)" stroke="${cv(c.c)}" stroke-width="3"><title>${esc(c.ar)}</title></rect>`).join("")}
    ${pts.map(p=>`<circle cx="${x(+p.lon).toFixed(1)}" cy="${y(+p.lat).toFixed(1)}" r="${4+p.visits/8}" fill="${cv(clinic(p.clinic).c)}" fill-opacity=".75" stroke="var(--surface)" stroke-width="1.5"><title>${esc(p.ar)} · ${p.visits} زيارة</title></circle>`).join("")}</svg>`}
 
 function vPoints(){
@@ -622,7 +624,7 @@ function vPoints(){
     <select data-f="ptType" aria-label="نوع الموقع">${opts(Object.entries(PT_TYPES),f.ptType,"كل أنواع المواقع")}</select>
     <select data-f="ptClinic" aria-label="العيادة المشرفة">${clinicOpts(f.ptClinic,"كل العيادات المشرفة")}</select></div><span class="meta muted">${list.length} من ${POINTS.length} نقطة</span></div>
     <div class="tbl-wrap"><table><thead><tr><th>النقطة</th><th>النوع</th><th>العيادة المشرفة</th><th>الزيارات</th><th>الإحداثيات</th></tr></thead><tbody>
-    ${list.map(p=>`<tr><td><b>${esc(p.ar)}</b><span class="sub">${esc(p.addr)}</span></td><td>${PT_TYPES[p.type]}</td><td>${clin(p.clinic)}</td><td class="num">${p.visits+done(p.id)}</td><td>${p.lat!==""&&p.lat!=null?`<a class="mono" href="${mapsUrl(p.lat,p.lon)}" target="_blank" rel="noopener">${(+p.lat).toFixed(4)}, ${(+p.lon).toFixed(4)}</a>`:'<span class="muted">—</span>'}${S.admin?` <button class="btn sm" data-act="ent-edit" data-kind="point" data-id="${esc(p.id)}">تعديل</button>`:""}</td></tr>`).join("")}
+    ${list.map(p=>`<tr><td><b>${esc(p.ar)}</b>${p.note?` <span class="chip s-Ready" style="font-size:11px">${esc(p.note)}</span>`:""}<span class="sub">${esc(p.addr||"")}</span></td><td>${PT_TYPES[p.type]||p.type}</td><td>${clin(p.clinic)}</td><td class="num">${p.visits+done(p.id)}</td><td>${p.lat!==""&&p.lat!=null?`<a class="mono" href="${mapsUrl(p.lat,p.lon)}" target="_blank" rel="noopener">${(+p.lat).toFixed(4)}, ${(+p.lon).toFixed(4)}</a>`:'<span class="muted">—</span>'}${S.admin?` <button class="btn sm" data-act="ent-edit" data-kind="point" data-id="${esc(p.id)}">تعديل</button>`:""}</td></tr>`).join("")}
     </tbody></table></div></section>`}
 
 function vStaff(){
@@ -793,7 +795,7 @@ async function drawSheet(o){
   const half=(CW-24)/2;
   const card=(xr,y0,w,h,label,val,sub,mark)=>{box(xr-w,y0,w,h,C.soft,C.line);if(mark){x.fillStyle=mark;x.fillRect(xr-w+24,y0+26,18,18)}txt(label,xr-24,y0+44,`400 22px ${AR}`,C.muted);x.font=fit(val,w-48,36,600,DS);txt(val,xr-24,y0+92,x.font,C.ink);let yy=y0+132;for(const ln of wrap(sub,`400 22px ${AR}`,w-48).slice(0,2)){txt(ln,xr-24,yy,`400 22px ${AR}`,C.muted);yy+=32}};
   card(R,y,half,200,"العيادة",cl.ar,`${cl.area} · المدير: ${cl.mgr}`,clHex);
-  card(R-half-24,y,half,200,"مكان الزيارة",pt.ar,pt.addr||"");
+  card(R-half-24,y,half,200,"مكان الزيارة",pt.ar,[pt.addr,pt.note].filter(Boolean).join(" · "));
   if(pt.lat!==""&&pt.lat!=null&&isFinite(+pt.lat))txt(`${(+pt.lat).toFixed(4)}, ${(+pt.lon).toFixed(4)}`,R-half-24-half+24,y+44,`500 20px ${MO}`,C.muted,"left","ltr");
   y+=224;const q=(CW-3*20)/4;
   [[`التاريخ · ${fmtDay(d)}`,o.date,MO,500],["موعد الانطلاق",o.dep||"—",MO,500],["موعد العودة",o.ret||"—",MO,500],["نوع الخدمة",SV[o.service]||o.service,DS,600]].forEach(([l,v,fam,wt],i)=>{const xr=R-i*(q+20);box(xr-q,y,q,124,"#ffffff",C.line);txt(l,xr-22,y+44,`400 21px ${AR}`,C.muted);const f=fit(v,q-44,32,wt,fam);txt(v,xr-22,y+96,f,C.ink,"right",fam===MO?"ltr":"rtl")});
