@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="description" content="عمليات Outreach: متابعة زيارات فرق الصحة والتغذية إلى المخيمات ومراكز الإيواء.">
+<link rel="preconnect" href="https://gmzdlnapsgxidxotdazp.supabase.co">
 <title>عمليات Outreach</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -345,15 +346,73 @@ const LS="outreach-local-v1";
 function loadLocal(){try{const d=JSON.parse(localStorage.getItem(LS)||"{}");S.ops=d.ops||[];S.staff=d.staff||[]}catch(e){}}
 function saveLocal(){try{localStorage.setItem(LS,JSON.stringify({ops:S.ops,staff:S.staff}))}catch(e){}}
 async function put(col,id,data){
+  if(supaOn()){const {error}=await sb.from("records").upsert({collection:col,id,data:JSON.parse(JSON.stringify(data)),updated_at:new Date().toISOString()});if(error){toast(supaErr(error));return false}supaApply({collection:col,id,data},false);render();return true}
   if(db){try{await db.collection(col).doc(id).set(data);return true}catch(e){toast(errMsg(e));render();return false}}
   const arr=S[col];const i=arr.findIndex(x=>x.id===id);const rec={id,...data};if(i>=0)arr[i]=rec;else arr.push(rec);saveLocal();render();return true}
 async function del(col,id){
+  if(supaOn()){const {error}=await sb.from("records").delete().eq("collection",col).eq("id",id);if(error){toast(supaErr(error));return false}supaApply({collection:col,id},true);render();return true}
   if(db){try{await db.collection(col).doc(id).delete();return true}catch(e){toast(errMsg(e));return false}}
   S[col]=S[col].filter(x=>x.id!==id);saveLocal();render();return true}
+
+/* ---------- Supabase (shared data for the public GitHub site) ---------- */
+const SUPA={url:"https://gmzdlnapsgxidxotdazp.supabase.co",key:"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdtemRsbmFwc2d4aWR4b3RkYXpwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQzMTE5NjQsImV4cCI6MjEwOTg4Nzk2NH0.CSg-c-mKWB13NF5R_aqVmHt-WSvFoEQJiZ3evtn6M2I"}; // set at build time for the GitHub site
+let sb=null;
+const supaOn=()=>!!sb;
+function loadSupaLib(){return window.supabase?Promise.resolve(window.supabase):new Promise((res,rej)=>{const s=document.createElement("script");s.src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js";s.onload=()=>window.supabase?res(window.supabase):rej();s.onerror=rej;document.head.appendChild(s)})}
+function supaApply(row,deleted){
+  if(row.collection==="settings"){if(row.id==="config"){S.config=normalizeConfig(deleted?null:{...row.data,adminHash:null});applyConfig()}return}
+  const col=row.collection;if(!S[col])return;
+  S[col]=S[col].filter(x=>x.id!==row.id);if(!deleted)S[col].push({id:row.id,...row.data})}
+async function supaRole(){
+  S.user=null;S.role=null;S.admin=false;S.readOnly=true;
+  const {data:{session}}=await sb.auth.getSession();
+  if(session){S.user=session.user.email;const {data}=await sb.from("members").select("role").ilike("email",S.user).maybeSingle();S.role=data?data.role:null;S.readOnly=!S.role;S.admin=S.role==="admin";if(S.admin)supaMembers()}
+  render()}
+async function supaMembers(){const {data,error}=await sb.from("members").select("*").order("added_at");if(!error){S.members=data||[];if(cur()==="admin")render()}}
+async function supaBoot(){
+  const lib=await loadSupaLib();sb=lib.createClient(SUPA.url,SUPA.key,{auth:{persistSession:true,detectSessionInUrl:true}});
+  S.mode="supa";setLive();
+  const load=async()=>{const {data,error}=await sb.from("records").select("collection,id,data");if(error)throw error;S.ops=[];S.staff=[];let cfg=null;
+    for(const r of data){if(r.collection==="settings"&&r.id==="config")cfg=r.data;else if(S[r.collection])S[r.collection].push({id:r.id,...r.data})}
+    S.config=normalizeConfig(cfg);applyConfig();S.ready.ops=S.ready.staff=true};
+  try{await load()}catch(e){S.mode="supa-err";S.ready.ops=S.ready.staff=true;setLive();render();return}
+  sb.channel("records-live").on("postgres_changes",{event:"*",schema:"public",table:"records"},p=>{if(p.eventType==="DELETE")supaApply(p.old,true);else supaApply(p.new,false);render()})
+    .subscribe(st=>{if(st==="SUBSCRIBED"){S.mode="supa";setLive()}else if(st==="CHANNEL_ERROR"||st==="TIMED_OUT"){S.mode="supa-stale";setLive()}});
+  document.addEventListener("visibilitychange",()=>{if(!document.hidden)load().then(render).catch(()=>{})});
+  sb.auth.onAuthStateChange((ev)=>{if(ev==="SIGNED_IN"||ev==="SIGNED_OUT"||ev==="TOKEN_REFRESHED")supaRole()});
+  await supaRole();setLive();render()}
+function supaErr(e){const m=String(e&&e.message||"");if(/row-level security|permission|42501/i.test(m))return S.user?"حسابك غير مضاف للفريق بعد. اطلب من المشرف إضافة بريدك.":"سجّل الدخول أولاً لتتمكن من التعديل.";return "تعذّر الحفظ الآن. تحقق من الاتصال وحاول مرة أخرى."}
+function supaLogin(){
+  const dlg=$("#opDlg"),form=$("#opForm");form.onchange=form.oninput=null;
+  form.innerHTML=`<div class="dlg-h"><div><h2>تسجيل الدخول</h2><span class="muted" style="font-size:12.5px">نرسل لك رابط دخول على بريدك، بدون كلمة مرور</span></div><button type="button" class="btn sm" data-x aria-label="إغلاق">✕</button></div>
+  <div class="dlg-b"><div class="field full"><label for="lg-email">البريد الإلكتروني</label><input id="lg-email" type="email" dir="ltr" autocomplete="email" required placeholder="name@example.org"></div>
+  <p class="full muted" style="margin:0;font-size:12.5px">العرض متاح للجميع. الإضافة والتعديل لأعضاء الفريق الذين أضافهم المشرف.</p>
+  <p class="full" id="lg-msg" style="margin:0;font-size:13px" hidden></p></div>
+  <div class="dlg-f"><span></span><div class="filters"><button type="button" class="btn" data-x>إلغاء</button><button type="submit" class="btn primary" id="lg-btn">أرسل رابط الدخول</button></div></div>`;
+  form.onclick=e=>{if(e.target.closest("[data-x]"))dlg.close()};
+  form.onsubmit=async e=>{e.preventDefault();const em=$("#lg-email").value.trim(),msg=$("#lg-msg"),b=$("#lg-btn");if(!em)return;b.disabled=true;b.textContent="جارٍ الإرسال…";
+    const {error}=await sb.auth.signInWithOtp({email:em,options:{emailRedirectTo:location.origin+location.pathname}});
+    b.disabled=false;b.textContent="أرسل رابط الدخول";msg.hidden=false;
+    if(error){msg.style.color="var(--bad)";msg.textContent=/rate/i.test(error.message)?"طلبات كثيرة خلال وقت قصير. انتظر دقيقة ثم حاول مجدداً.":"تعذّر إرسال الرابط. تأكد من البريد وحاول مرة أخرى."}
+    else{msg.style.color="var(--ok)";msg.textContent=`أرسلنا رابط الدخول إلى ${em}. افتحه من نفس الجهاز والمتصفح.`}};
+  dlg.showModal();setTimeout(()=>$("#lg-email")?.focus(),50)}
+function membersPanel(){
+  if(!supaOn())return "";
+  const rows=(S.members||[]).map(m=>`<tr><td dir="ltr" style="text-align:right" class="mono">${esc(m.email)}</td><td>${esc(m.name||"")}</td><td>${m.role==="admin"?"مشرف":"عضو فريق"}</td>
+    <td>${m.email.toLowerCase()===String(S.user||"").toLowerCase()?'<span class="muted">أنت</span>':`<div class="filters" style="flex-wrap:nowrap"><button class="btn sm" data-act="mem-role" data-email="${esc(m.email)}" data-role="${m.role==="admin"?"editor":"admin"}">${m.role==="admin"?"جعله عضواً":"جعله مشرفاً"}</button>${S.confirmMem===m.email?`<button class="btn sm danger" data-act="mem-del" data-email="${esc(m.email)}">تأكيد الإزالة</button>`:`<button class="btn sm danger" data-act="mem-ask" data-email="${esc(m.email)}">إزالة</button>`}</div>`}</td></tr>`).join("");
+  return `<section class="panel"><div class="panel-h"><div><h2>الفريق والصلاحيات (${(S.members||[]).length})</h2><p>من تضيف بريده هنا يستطيع تسجيل الدخول والإضافة والتعديل. الحذف وهذه اللوحة للمشرفين فقط.</p></div></div>
+    <form class="panel-b quick" id="memForm" style="grid-template-columns:minmax(0,1.4fr) minmax(0,1fr) minmax(0,1fr) auto">
+      <div class="field"><label for="mf-email">البريد الإلكتروني *</label><input id="mf-email" type="email" dir="ltr" required></div>
+      <div class="field"><label for="mf-name">الاسم</label><input id="mf-name"></div>
+      <div class="field"><label for="mf-role">الصلاحية</label><select id="mf-role"><option value="editor">عضو فريق</option><option value="admin">مشرف</option></select></div>
+      <div class="filters"><button class="btn primary">إضافة</button></div></form>
+    <div class="tbl-wrap"><table><thead><tr><th>البريد</th><th>الاسم</th><th>الصلاحية</th><th></th></tr></thead><tbody>${rows||'<tr><td colspan="4" class="muted">لا يوجد أعضاء بعد.</td></tr>'}</tbody></table></div></section>`}
+
 const newId=p=>p+"-"+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
 
 async function boot(){
   let api=null;
+  if(!window.claude&&SUPA.url&&SUPA.key){try{await supaBoot();return}catch(e){sb=null;S.mode="supa-err";setLive();render();return}}
   try{if(window.claude&&window.claude.use)api=await window.claude.use("db")}catch(e){}
   if(!api){S.mode="local";loadLocal();
     let fresh=true,cfg=null;try{fresh=!localStorage.getItem(LS);cfg=JSON.parse(localStorage.getItem(LSC)||"null")}catch(e){}
@@ -375,7 +434,7 @@ async function boot(){
   try{const u=await window.claude.use("user");if(u&&await u.canEdit()){S.admin=true;render()}}catch(e){}
 }
 function setLive(){
-  const m={loading:["جارٍ الاتصال بالبيانات…",1],live:["البيانات متزامنة مباشرة مع الفريق",1],stale:["تعذّر الوصول للبيانات بعد، قد تكون غير محدّثة",0],error:["انقطع الاتصال بالبيانات المشتركة",0],local:["البيانات محفوظة على هذا المتصفح",1]}[S.mode];
+  const m={loading:["جارٍ الاتصال بالبيانات…",1],live:["البيانات متزامنة مباشرة مع الفريق",1],stale:["تعذّر الوصول للبيانات بعد، قد تكون غير محدّثة",0],error:["انقطع الاتصال بالبيانات المشتركة",0],local:["البيانات محفوظة على هذا المتصفح",1],supa:["البيانات متزامنة مباشرة مع الفريق",1],"supa-stale":["الاتصال المباشر متقطع، يُحدَّث عند العودة للصفحة",0],"supa-err":["تعذّر الاتصال بقاعدة البيانات",0]}[S.mode];
   $("#liveTxt").textContent=m[0];$("#liveDot").className="dot"+(m[1]?"":" off")}
 
 
@@ -400,8 +459,9 @@ function normalizeConfig(c){c=c||{};let points=Array.isArray(c.points)?c.points:
 function applyConfig(){CLINICS=S.config.clinics;POINTS=S.config.points;document.title=T("siteName");const b=$("#brandName"),s=$("#brandSub");if(b)b.textContent=T("siteName");if(s)s.textContent=T("siteSub")}
 async function saveConfig(next){
   const cfg=normalizeConfig({...S.config,...next});
-  if(db){try{await db.doc("settings/config").set(JSON.parse(JSON.stringify({labels:cfg.labels,clinics:cfg.clinics,points:cfg.points,pointsVer:POINTS_VER})))}catch(e){toast(e&&e.code==="invalid_argument"?"تعديل الإعدادات متاح للمشرف فقط.":errMsg(e));return false}}
-  S.config=cfg;applyConfig();if(!db){try{localStorage.setItem(LSC,JSON.stringify(cfg))}catch(e){}}render();return true}
+  if(supaOn()){const {error}=await sb.from("records").upsert({collection:"settings",id:"config",data:JSON.parse(JSON.stringify({labels:cfg.labels,clinics:cfg.clinics,points:cfg.points,pointsVer:POINTS_VER})),updated_at:new Date().toISOString()});if(error){toast(supaErr(error));return false}}
+  else if(db){try{await db.doc("settings/config").set(JSON.parse(JSON.stringify({labels:cfg.labels,clinics:cfg.clinics,points:cfg.points,pointsVer:POINTS_VER})))}catch(e){toast(e&&e.code==="invalid_argument"?"تعديل الإعدادات متاح للمشرف فقط.":errMsg(e));return false}}
+  S.config=cfg;applyConfig();if(!db&&!supaOn()){try{localStorage.setItem(LSC,JSON.stringify(cfg))}catch(e){}}render();return true}
 const cv=c=>!c?"var(--muted)":String(c).startsWith("--")?`var(${c})`:c;
 const hexOf=c=>String(c||"").startsWith("--")?(getComputedStyle(document.documentElement).getPropertyValue(c).trim()||"#005EB8"):(c||"#005EB8");
 const mapsUrl=(lat,lon)=>`https://www.google.com/maps?q=${lat},${lon}`;
@@ -429,10 +489,11 @@ function exitAdmin(){S.admin=false;try{sessionStorage.removeItem("outreach-admin
 
 /* ---------- admin view ---------- */
 function vAdmin(){
-  if(!S.admin)return `<div class="empty"><b>هذه الصفحة للمشرف فقط</b><button class="btn primary" data-act="admin-login" style="margin-top:10px">دخول المشرف</button></div>`;
+  if(!S.admin)return `<div class="empty"><b>هذه الصفحة للمشرف فقط</b><button class="btn primary" data-act="${supaOn()?"login":"admin-login"}" style="margin-top:10px">${supaOn()?"تسجيل الدخول":"دخول المشرف"}</button></div>`;
   const cnt=id=>POINTS.filter(p=>p.clinic===id).length;
   return `<div class="section-head"><div><h1>لوحة المشرف</h1><p>أضف أو عدّل أو احذف العيادات والنقاط وإحداثياتها، وغيّر عناوين الموقع ونصوصه.</p></div>
     <div class="filters">${S.mode==="local"?`<button class="btn" data-act="admin-pass">تغيير كلمة المرور</button>`:""}${S.mode==="local"?`<button class="btn" data-act="admin-out">خروج من وضع المشرف</button>`:""}</div></div>
+  ${membersPanel()}
   <section class="panel"><div class="panel-h"><div><h2>العيادات (${CLINICS.length})</h2><p>حذف العيادة متاح بعد نقل نقاطها لعيادة أخرى</p></div><button class="btn primary sm" data-act="ent-new" data-kind="clinic">+ إضافة عيادة</button></div>
     <div class="tbl-wrap"><table><thead><tr><th>العيادة</th><th>المنطقة</th><th>المدير</th><th>الهاتف</th><th>النقاط</th><th></th></tr></thead><tbody>
     ${CLINICS.map(c=>`<tr><td><span class="clin" style="--cc:${cv(c.c)}"><b>${esc(c.ar)}</b></span><span class="sub" dir="ltr" style="text-align:right">${esc(c.en||"")}</span></td><td>${esc(c.area||"")}${c.lat!==""&&c.lat!=null?`<span class="sub"><a class="mono" href="${mapsUrl(c.lat,c.lon)}" target="_blank" rel="noopener">${(+c.lat).toFixed(5)}, ${(+c.lon).toFixed(5)}</a></span>`:""}</td><td>${esc(c.mgr||"")}</td><td class="mono">${esc(c.phone||"—")}</td><td class="num">${cnt(c.id)}</td>
@@ -506,7 +567,8 @@ const cur=()=>{const h=location.hash.slice(1);return h==="admin"||VIEWS.some(v=>
 function renderNav(){
   const counts={ops:S.ops.length,clinics:CLINICS.length,points:POINTS.length,staff:S.staff.length};
   $("#nav").innerHTML=VIEWS.map(([k,l])=>`<a href="#${k}" ${cur()===k?'aria-current="page"':""}><span>${esc(T("nav."+k))}</span>${counts[k]!=null?`<span class="count">${counts[k]}</span>`:""}</a>`).join("")+(S.admin?`<a href="#admin" class="nav-admin" ${cur()==="admin"?'aria-current="page"':""}><span>لوحة المشرف</span></a>`:"");
-  const ab=$("#adminBtn");if(ab){ab.hidden=S.mode!=="local"&&!S.admin;ab.textContent=S.admin?(S.mode==="local"?"خروج من وضع المشرف":"وضع المشرف مفعّل"):"دخول المشرف"}}
+  const ab=$("#adminBtn");if(ab&&supaOn()){ab.hidden=false;ab.innerHTML=S.user?`<span style="display:block;font-size:11px;opacity:.75">${S.admin?"مشرف":S.role?"عضو فريق":"غير مضاف للفريق"}</span><span dir="ltr">${esc(S.user)}</span> · خروج`:"تسجيل الدخول للتعديل"}
+  else if(ab){ab.hidden=S.mode!=="local"&&!S.admin;ab.textContent=S.admin?(S.mode==="local"?"خروج من وضع المشرف":"وضع المشرف مفعّل"):"دخول المشرف"}}
 
 function opts(list,sel,all){return (all?`<option value="">${all}</option>`:"")+list.map(([v,l])=>`<option value="${esc(v)}" ${v===sel?"selected":""}>${esc(l)}</option>`).join("")}
 const clinicOpts=(sel,all)=>opts(CLINICS.map(c=>[c.id,c.ar]),sel,all);
@@ -514,7 +576,7 @@ const chip=s=>`<span class="chip s-${s}"><i></i>${ST[s]||s}</span>`;
 const clin=id=>`<span class="clin" style="--cc:${cv(clinic(id).c)}">${esc(clinic(id).ar)}</span>`;
 const plural=n=>n===1?"فرد واحد":n===2?"فردان":n<=10?n+" أفراد":n+" فرداً";
 const teamTxt=o=>{const t=o.team||[];if(!t.length)return '<span class="muted">لم يُحدد</span>';const lead=t.find(x=>x.id===o.leader);if(!lead)return `<span class="muted">بدون Focal Point</span><span class="sub">${plural(t.length)}</span>`;const ph=lead.phone||(S.staff.find(s=>s.id===lead.id)||{}).phone;return `${esc(lead.name)} <span class="fp" title="Focal Point"><svg class="fpi" width="13" height="13" viewBox="0 0 14 14" aria-hidden="true"><circle cx="7" cy="7" r="5.4" fill="none" stroke="currentColor" stroke-width="1.6"/><circle cx="7" cy="7" r="2.2" fill="currentColor"/></svg></span><span class="sub">${ph?`<span class="mono">${esc(ph)}</span> · `:""}${plural(t.length)}</span>`};
-const canWrite=()=>!S.readOnly&&S.mode!=="error";
+const canWrite=()=>!S.readOnly&&S.mode!=="error"&&S.mode!=="supa-err";
 const addBtn=(label="عملية جديدة")=>`<button class="btn primary" data-act="new-op" ${canWrite()?"":"disabled"}><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><path d="M7 1v12M1 7h12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>${label}</button>`;
 
 function topbar(key,title,sub){
@@ -523,7 +585,8 @@ function topbar(key,title,sub){
   <div class="tools"><label class="search"><input id="q" type="search" placeholder="بحث: كود، عيادة، مخيم، اسم…" value="${esc(S.f.q)}" aria-label="بحث"><svg width="15" height="15" viewBox="0 0 16 16" aria-hidden="true"><circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.6" fill="none"/><path d="M11 11l3.5 3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></label>
   <span class="today">${fmtDay(d)} · <span class="mono">${iso(d)}</span></span>${addBtn()}</div></div>
   ${S.mode==="local"?`<div class="banner localbar"><span>البيانات محفوظة على هذا المتصفح فقط. نزّل نسخة احتياطية بانتظام، واستعدها على أي جهاز آخر لنقل البيانات.</span><span class="filters"><button class="btn sm" data-act="backup">تنزيل نسخة احتياطية</button><label class="btn sm" for="restoreFile">استعادة من ملف</label><input id="restoreFile" type="file" accept=".json,application/json" hidden></span></div>`:""}
-  ${S.readOnly?`<div class="banner">صلاحيتك للعرض فقط. اطلب من صاحب الصفحة صلاحية "مساهم" لتعديل العمليات.</div>`:""}`}
+  ${S.readOnly?`<div class="banner">${supaOn()?(S.user?"بريدك غير مضاف للفريق بعد، لذلك تستطيع العرض فقط. اطلب من المشرف إضافتك.":`أنت تتصفح للعرض فقط. <button class="linkbtn" data-act="login">سجّل الدخول</button> لإضافة العمليات وتعديلها.`):'صلاحيتك للعرض فقط. اطلب من صاحب الصفحة صلاحية "مساهم" لتعديل العمليات.'}</div>`:""}
+  ${S.mode==="supa-err"?`<div class="banner">تعذّر الاتصال بقاعدة البيانات. تحقق من الإنترنت ثم أعد تحميل الصفحة.</div>`:""}`}
 
 function opsTable(list,{compact}={}){
   if(!list.length)return `<div class="empty"><b>لا توجد عمليات مطابقة</b>${S.ops.length?"غيّر الفلاتر أو نطاق التاريخ.":"أضف أول عملية Outreach لتظهر هنا."}</div>`;
@@ -856,6 +919,11 @@ document.addEventListener("click",async e=>{
     if(act==="new-op")openOp(null,{date:a.dataset.date,clinic:a.dataset.clinic});
     if(act==="reset"){Object.assign(S.f,{clinic:"",status:"",service:"",range:"today",q:""});render()}
     if(act==="wk"){S.f.weekOffset=a.dataset.d==="0"?0:S.f.weekOffset+Number(a.dataset.d);render()}
+    if(act==="admin-toggle"&&supaOn()){if(S.user){await sb.auth.signOut();toast("سجّلت الخروج")}else supaLogin();return}
+    if(act==="login"){supaLogin();return}
+    if(act==="mem-ask"){S.confirmMem=a.dataset.email;render();return}
+    if(act==="mem-del"){S.confirmMem=null;const {error}=await sb.from("members").delete().eq("email",a.dataset.email);if(error)toast(supaErr(error));else{toast("أُزيل "+a.dataset.email);supaMembers()}return}
+    if(act==="mem-role"){const {error}=await sb.from("members").update({role:a.dataset.role}).eq("email",a.dataset.email);if(error)toast(supaErr(error));else{toast("تغيّرت الصلاحية");supaMembers()}return}
     if(act==="admin-toggle"){S.admin?(S.mode==="local"?exitAdmin():location.hash="admin"):adminLogin()}
     if(act==="admin-login")adminLogin();
     if(act==="admin-out")exitAdmin();
@@ -888,6 +956,7 @@ document.addEventListener("change",async e=>{
 });
 document.addEventListener("input",e=>{if(e.target.id==="q"){S.f.q=e.target.value;clearTimeout(render.t);render.t=setTimeout(render,180)}});
 document.addEventListener("submit",async e=>{
+  if(e.target.id==="memForm"){e.preventDefault();const em=$("#mf-email").value.trim().toLowerCase();if(!em)return;const {error}=await sb.from("members").upsert({email:em,name:$("#mf-name").value.trim(),role:$("#mf-role").value});if(error){toast(supaErr(error));return}toast("أُضيف "+em+". يستطيع الآن تسجيل الدخول ببريده.");supaMembers();return}
   if(e.target.id==="labelsForm"){e.preventDefault();const labels={};e.target.querySelectorAll("[data-lb]").forEach(i=>{if(i.value.trim())labels[i.dataset.lb]=i.value.trim()});if(await saveConfig({labels}))toast("حُفظت العناوين");return}
   if(e.target.id!=="staffForm")return;e.preventDefault();
   const name=$("#sf-name").value.trim();if(!name)return;
