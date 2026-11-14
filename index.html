@@ -231,6 +231,37 @@ dialog::backdrop{background:rgba(10,20,20,.45)}
 .section-head h1{font-size:22px}
 .section-head p{margin:2px 0 0;color:var(--muted);font-size:13px;max-width:62ch}
 /* responsive */
+/* readiness / coordination */
+.ready{display:flex;flex-wrap:wrap;gap:6px}
+.rk{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);background:var(--surface);border-radius:999px;padding:3px 11px;font-size:12.5px;cursor:pointer;color:var(--muted)}
+.rk::before{content:"";width:13px;height:13px;border-radius:50%;border:1.6px solid currentColor;flex:none;box-sizing:border-box}
+.rk.on{background:var(--ok-soft);border-color:var(--ok);color:var(--ok);font-weight:500}
+.rk.on::before{background:currentColor;box-shadow:inset 0 0 0 2px var(--ok-soft)}
+.rk[disabled]{cursor:default}
+.rbar{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)}
+.rbar .track{width:64px;height:6px;border-radius:3px;background:var(--sunk);overflow:hidden}
+.rbar .track i{display:block;height:100%;background:var(--teal)}
+.rbar.full .track i{background:var(--ok)}
+.flag{display:block;margin-top:4px;font-size:12px;color:var(--warn);background:var(--warn-soft);border-radius:6px;padding:3px 8px}
+.coord{display:grid;gap:10px}
+.cop{border:1px solid var(--line);border-inline-start:4px solid var(--cc);border-radius:10px;background:var(--surface);padding:12px 14px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px 14px;align-items:start}
+.cop h3{font-size:15px}
+.cop .meta{color:var(--muted);font-size:12.5px}
+.cop .side{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+.cop .row{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;font-size:13px}
+.cop a.tel{font-family:var(--f-mono);font-size:12.5px;direction:ltr;unicode-bidi:isolate}
+.dayhead{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin:18px 2px 8px}
+.dayhead h2{font-size:16px}
+.vt{font-size:11.5px;border-radius:999px;padding:1px 9px;background:var(--accent-soft);color:var(--accent);font-weight:500;white-space:nowrap}
+.vt.d2{background:var(--live-soft);color:var(--live)}
+.prep{grid-column:1/-1;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;background:var(--info-soft);border-radius:10px;padding:12px}
+.prep .ttl{grid-column:1/-1;font-family:var(--f-display);color:var(--info);font-size:14px;display:flex;justify-content:space-between;gap:8px;align-items:center}
+.prep .full{grid-column:1/-1}
+.prep .sub2{font-size:12px;color:var(--muted);margin:0}
+.ticks{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13px}
+.ticks label{display:inline-flex;gap:6px;align-items:center;cursor:pointer}
+.hist{font-size:12px;color:var(--muted);margin:0;padding-inline-start:16px}
+@media (max-width:560px){.prep{grid-template-columns:1fr}.cop{grid-template-columns:1fr}.cop .side{align-items:flex-start}}
 @media (max-width:980px){.grid2{grid-template-columns:1fr}}
 @media (max-width:820px){
   .adminbtn{margin-top:0;white-space:nowrap}
@@ -311,10 +342,23 @@ const POINTS_VER=2,OLD_POINT_IDS=Array.from({length:26},(_,i)=>"LOC-"+String(i+1
 const STATUSES=[["Planned","مخططة"],["Ready","جاهزة"],["Departed","غادرت"],["OnSite","في الموقع"],["Returning","في طريق العودة"],["Completed","مكتملة"],["Delayed","متأخرة"],["OnHold","مؤجلة"]];
 const ST=Object.fromEntries(STATUSES);
 const ACTIVE=["Departed","OnSite","Returning"];
-const SERVICES=[["Health + Nutrition","صحية وتغذوية"],["Health","صحية فقط"],["Nutrition","تغذية"],["Immunization","تطعيمات"],["MHPSS","دعم نفسي واجتماعي"]];
+const SERVICES=[["Integrated Outreach","توعية متكاملة وتغذية"],["Health + Nutrition","صحية وتغذوية"],["Health","صحية فقط"],["Nutrition","تغذية"],["Immunization","تطعيمات"],["MHPSS","دعم نفسي واجتماعي"]];
 const SV=Object.fromEntries(SERVICES);
-const ROLES=[["Doctor","طبيب"],["Nurse","ممرض/ة"],["Midwife","قابلة قانونية"],["Nutrition Officer","أخصائي تغذية"],["CHP","CHP"],["Help desk","Help desk"],["Team Leader","قائد فريق"],["Data Collector","مدخل بيانات"],["Support Staff","دعم لوجستي"]];
+const ROLES=[["Doctor","طبيب"],["Nurse","ممرض/ة"],["Midwife","قابلة قانونية"],["Nutrition Officer","أخصائي تغذية"],["CHP","CHP"],["Help desk","Help desk"],["Team Leader","قائد فريق"],["Data Collector","مدخل بيانات"],["Support Staff","دعم لوجستي"],
+ ["CMAM Nurse","ممرض/ة CMAM"],["IYCF Counsellor","مستشار/ة IYCF"],["PSS Worker","أخصائي دعم نفسي PSS"],["WASH Promoter","مروّج WASH"],["SBC Assistant","مساعد SBC"]];
 const RL={...Object.fromEntries(ROLES),CHNP:"CHP"};
+/* outreach plan: visit types, pre-visit readiness, supplies, daily report */
+const VTYPES=[["D1","اليوم الأول: حشد وفحص"],["D2","اليوم الثاني: متابعة"]];
+const VT=Object.fromEntries(VTYPES);
+const CHECKS=[["site","مسؤول المخيم أكّد"],["supplies","المستلزمات جاهزة"],["move","النقل والأمن مؤكدان"],["partners","الحماية وWASH مؤكدان"]];
+const SUPPLIES=[["muac","شرائط MUAC"],["lns","LNS-MQ للحالات المؤهلة"],["rollup","رول أب Project HOPE"],["cfm","ملصقات CFM / صندوق شكاوى"],["iec","مواد توعية IEC"]];
+const TOPICS=[["nut","التغذية وIYCF"],["health","الصحة (URTI، البرد، علامات الخطر)"],["wash","المياه والإصحاح WASH"],["ecd","الحماية وتنمية الطفولة ECD"]];
+const REPF=[["scr","فُحصوا (MUAC)"],["mam","إحالات MAM"],["sam","إحالات SAM"],["lns","استلموا LNS-MQ"],["aw","جلسات توعية"],["iycf","جلسات IYCF"],["moms","أمهات متطوعات"]];
+const chk=o=>o.checks||{};
+const readyN=o=>CHECKS.filter(([k])=>chk(o)[k]).length;
+const isReady=o=>readyN(o)===CHECKS.length;
+function nextWorkDay(ds){const d=new Date(ds+"T00:00");do{d.setDate(d.getDate()+1)}while(d.getDay()===5||d.getDay()===6);return iso(d)}
+const refs=r=>(+r.mam||0)+(+r.sam||0);
 const DAYS=["الأحد","الإثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"];
 let CLINICS=DEF_CLINICS,POINTS=DEF_POINTS;
 const clinic=id=>CLINICS.find(c=>c.id===id)||{ar:"—",c:"--muted"};
@@ -460,12 +504,13 @@ const LABELS=[
  ["siteName","اسم الموقع","عمليات Outreach"],["siteSub","السطر تحت الاسم","متابعة الزيارات الميدانية"],
  ["overview.t","عنوان: نظرة عامة","نظرة عامة"],["overview.s","وصف: نظرة عامة","متابعة زيارات فرق الصحة والتغذية إلى المخيمات ومراكز الإيواء."],
  ["ops.t","عنوان: العمليات","سجل عمليات Outreach"],["ops.s","وصف: العمليات","كل العمليات المجدولة والمنفذة. اضغط على أي صف لتعديله أو إغلاقه بتقرير زيارة."],
+ ["ready.t","عنوان: التنسيق","التنسيق والجاهزية"],["ready.s","وصف: التنسيق","لا يتحرك أي فريق قبل اكتمال أربعة تأكيدات: مسؤول المخيم، المستلزمات، النقل والأمن، والحماية وWASH."],
  ["week.t","عنوان: الخطة الأسبوعية","الخطة الأسبوعية"],
  ["clinics.t","عنوان: العيادات","العيادات"],["clinics.s","وصف: العيادات","العيادات التي تخرج منها الفرق، مع الكوادر والمخيمات التابعة لكل عيادة."],
  ["points.t","عنوان: النقاط","نقاط Outreach والمخيمات"],["points.s","وصف: النقاط","مخيمات النزوح ومراكز الإيواء المستهدفة بخدمات الصحة والتغذية."],
  ["staff.t","عنوان: الكوادر","الكوادر"],["staff.s","وصف: الكوادر","أضف الكوادر وحدّد عيادة كل منهم ليظهروا عند اختيار فريق أي عملية."],
- ["reports.t","عنوان: التقارير","التقارير"],["reports.s","وصف: التقارير","نتائج الزيارات: الاستشارات الطبية، فحوصات MUAC، وحالات سوء التغذية."],
- ["nav.overview","القائمة: نظرة عامة","نظرة عامة"],["nav.ops","القائمة: العمليات","العمليات"],["nav.week","القائمة: الخطة الأسبوعية","الخطة الأسبوعية"],["nav.clinics","القائمة: العيادات","العيادات"],["nav.points","القائمة: النقاط","النقاط والمخيمات"],["nav.staff","القائمة: الكوادر","الكوادر الميدانية"],["nav.reports","القائمة: التقارير","التقارير"]];
+ ["reports.t","عنوان: التقارير","التقارير"],["reports.s","وصف: التقارير","نتائج التقارير اليومية حسب الخطة: الفحص، الإحالات، LNS-MQ، الجلسات، والأمهات المتطوعات."],
+ ["nav.overview","القائمة: نظرة عامة","نظرة عامة"],["nav.ready","القائمة: التنسيق","التنسيق والجاهزية"],["nav.ops","القائمة: العمليات","العمليات"],["nav.week","القائمة: الخطة الأسبوعية","الخطة الأسبوعية"],["nav.clinics","القائمة: العيادات","العيادات"],["nav.points","القائمة: النقاط","النقاط والمخيمات"],["nav.staff","القائمة: الكوادر","الكوادر الميدانية"],["nav.reports","القائمة: التقارير","التقارير"]];
 const LDEF=Object.fromEntries(LABELS.map(([k,,d])=>[k,d]));
 const T=k=>{const v=(S.config.labels||{})[k];return v!=null&&String(v).trim()!==""?v:LDEF[k]};
 function normalizeConfig(c){c=c||{};let points=Array.isArray(c.points)?c.points:DEF_POINTS,clinics=Array.isArray(c.clinics)&&c.clinics.length?c.clinics:DEF_CLINICS;
@@ -510,6 +555,7 @@ function vAdmin(){
   return `<div class="section-head"><div><h1>لوحة المشرف</h1><p>أضف أو عدّل أو احذف العيادات والنقاط وإحداثياتها، وغيّر عناوين الموقع ونصوصه.</p></div>
     <div class="filters">${S.mode==="local"?`<button class="btn" data-act="admin-pass">تغيير كلمة المرور</button>`:""}${S.mode==="local"?`<button class="btn" data-act="admin-out">خروج من وضع المشرف</button>`:""}</div></div>
   ${membersPanel()}
+  <section class="panel"><div class="panel-h"><div><h2>خطة التغذية المتكاملة · نوفمبر 2026</h2><p>إدراج زيارات الخطة المعتمدة (22 مخيماً × يومان = 44 زيارة) مع مشاركي الحماية. لا يكرر ما أُدرج سابقاً.</p></div><button class="btn primary sm" data-act="import-plan">إدراج زيارات الخطة (${S.ops.filter(o=>o.plan==="nov26").length}/44 مدرجة)</button></div></section>
   <section class="panel"><div class="panel-h"><div><h2>العيادات (${CLINICS.length})</h2><p>حذف العيادة متاح بعد نقل نقاطها لعيادة أخرى</p></div><button class="btn primary sm" data-act="ent-new" data-kind="clinic">+ إضافة عيادة</button></div>
     <div class="tbl-wrap"><table><thead><tr><th>العيادة</th><th>المنطقة</th><th>المدير</th><th>الهاتف</th><th>النقاط</th><th></th></tr></thead><tbody>
     ${CLINICS.map(c=>`<tr><td><span class="clin" style="--cc:${cv(c.c)}"><b>${esc(c.ar)}</b></span><span class="sub" dir="ltr" style="text-align:right">${esc(c.en||"")}</span></td><td>${esc(c.area||"")}${c.lat!==""&&c.lat!=null?`<span class="sub"><a class="mono" href="${mapsUrl(c.lat,c.lon)}" target="_blank" rel="noopener">${(+c.lat).toFixed(5)}, ${(+c.lon).toFixed(5)}</a></span>`:""}</td><td>${esc(c.mgr||"")}</td><td class="mono">${esc(c.phone||"—")}</td><td class="num">${cnt(c.id)}</td>
@@ -578,7 +624,7 @@ function late(o){return o.date===todayISO()&&["Planned","Ready"].includes(o.stat
 const rep=o=>o.report||{};
 
 /* ---------- views ---------- */
-const VIEWS=[["overview","نظرة عامة"],["ops","العمليات"],["week","الخطة الأسبوعية"],["clinics","العيادات"],["points","النقاط والمخيمات"],["staff","الكوادر الميدانية"],["reports","التقارير"]];
+const VIEWS=[["overview","نظرة عامة"],["ready","التنسيق والجاهزية"],["ops","العمليات"],["week","الخطة الأسبوعية"],["clinics","العيادات"],["points","النقاط والمخيمات"],["staff","الكوادر الميدانية"],["reports","التقارير"]];
 const cur=()=>{const h=location.hash.slice(1);return h==="admin"||VIEWS.some(v=>v[0]===h)?h:"overview"};
 function renderNav(){
   const counts={ops:S.ops.length,clinics:CLINICS.length,points:POINTS.length,staff:S.staff.length};
@@ -609,16 +655,18 @@ function opsTable(list,{compact}={}){
   if(!list.length)return `<div class="empty"><b>لا توجد عمليات مطابقة</b>${S.ops.length?"غيّر الفلاتر أو نطاق التاريخ.":"أضف أول عملية Outreach لتظهر هنا."}</div>`;
   return `<div class="tbl-wrap"><table><thead><tr><th>الكود</th>${compact?"":"<th>التاريخ</th>"}<th>العيادة ← المكان</th><th>الخدمة</th><th>الفريق</th><th>الانطلاق / العودة</th><th>الحالة</th></tr></thead><tbody>
   ${list.map(o=>`<tr class="click" data-open="${esc(o.id)}"><td class="mono">${esc(o.code)}</td>${compact?"":`<td class="mono">${esc(o.date)}<span class="sub" style="font-family:var(--f-body)">${fmtDay(new Date(o.date+"T00:00"))}</span></td>`}
-  <td>${clin(o.clinic)}<span class="sub">${esc(point(o.point).ar)}</span></td><td>${esc(SV[o.service]||o.service)}</td><td>${teamTxt(o)}</td>
-  <td class="mono">${esc(o.dep)} – ${esc(o.ret)}</td>
-  <td data-stop>${canWrite()?`<select class="status" data-status="${esc(o.id)}" aria-label="تغيير الحالة">${opts(STATUSES,o.status)}</select>`:chip(o.status)}</td></tr>`).join("")}
+  <td>${clin(o.clinic)}<span class="sub">${esc(point(o.point).ar)} ${vtChip(o)}${o.flag?' <span class="chip s-Delayed" style="font-size:11px" title="'+esc(o.flag)+'">تحتاج تأكيد</span>':""}</span></td><td>${esc(SV[o.service]||o.service)}</td><td>${teamTxt(o)}</td>
+  <td class="mono">${esc(o.dep||"—")} – ${esc(o.ret||"—")}</td>
+  <td data-stop>${canWrite()?`<select class="status" data-status="${esc(o.id)}" aria-label="تغيير الحالة">${opts(STATUSES,o.status)}</select>`:chip(o.status)}<div style="margin-top:4px">${rbar(o)}</div></td></tr>`).join("")}
   </tbody></table></div>`}
 
 function vOverview(){
   const t=todayISO();const today=S.ops.filter(o=>o.date===t);
   const f=S.f;const list=sortOps(S.ops.filter(o=>(!f.clinic||o.clinic===f.clinic)&&(!f.status||o.status===f.status)&&(!f.service||o.service===f.service)&&inRange(o,f.range)&&matchQ(o,f.q)));
-  const alerts=[...S.ops.filter(o=>["Delayed","OnHold"].includes(o.status)).map(o=>({o,bad:o.status==="OnHold",msg:o.status==="OnHold"?"العملية مؤجلة":"العملية متأخرة عن موعدها"})),...S.ops.filter(late).map(o=>({o,bad:false,msg:`مرّ موعد الانطلاق ${o.dep} ولم تبدأ بعد`}))];
-  const ben=today.reduce((a,o)=>a+(+rep(o).ben||0),0);
+  const alerts=[...S.ops.filter(o=>["Delayed","OnHold"].includes(o.status)).map(o=>({o,bad:o.status==="OnHold",msg:o.status==="OnHold"?"العملية مؤجلة":"العملية متأخرة عن موعدها"})),...S.ops.filter(late).map(o=>({o,bad:false,msg:`مرّ موعد الانطلاق ${o.dep} ولم تبدأ بعد`})),
+    ...S.ops.filter(o=>o.date===nextWorkDay(t)&&!isReady(o)&&o.status!=="OnHold").map(o=>({o,bad:false,msg:`يوم العمل التالي: الجاهزية ${readyN(o)}/${CHECKS.length}`})),
+    ...S.ops.filter(openReport).map(o=>({o,bad:false,msg:`زيارة ${o.date} لم تُغلق بتقرير`}))];
+  const ben=today.reduce((a,o)=>a+(+(rep(o).scr??rep(o).ben)||0),0);
   return topbar("overview","نظرة عامة","متابعة زيارات فرق الصحة والتغذية إلى المخيمات ومراكز الإيواء.")+`
   <div class="kpis">
     <div class="kpi"><span>عمليات اليوم</span><b>${N(today.length)}</b><small>مخطط لها</small></div>
@@ -627,7 +675,7 @@ function vOverview(){
     <div class="kpi ${alerts.length?"alert":""}"><span>متأخرة / مؤجلة</span><b>${N(alerts.length)}</b><small>تتطلب متابعة</small></div>
     <div class="kpi"><span>العيادات</span><b>${CLINICS.length}</b><small>عيادات مشاركة</small></div>
     <div class="kpi"><span>نقاط Outreach</span><b>${POINTS.length}</b><small>مخيمات وإيواء</small></div>
-    <div class="kpi"><span>مستفيدو اليوم</span><b>${N(ben)}</b><small>من تقارير الزيارات</small></div>
+    <div class="kpi"><span>فُحصوا اليوم</span><b>${N(ben)}</b><small>من التقارير اليومية</small></div>
   </div>
   <div class="grid2">
     <section class="panel"><div class="panel-h"><h2>العمليات</h2><a class="linkbtn" href="#ops">الجدول الكامل ←</a></div>
@@ -641,7 +689,7 @@ function vOverview(){
     </section>
     <div class="stack">
       <section class="panel"><div class="panel-h"><h2>للمتابعة</h2><span class="chip ${alerts.length?"s-Delayed":"s-Completed"}">${alerts.length} عملية</span></div>
-        ${alerts.length?`<div class="alerts">${alerts.map(a=>`<div class="alert ${a.bad?"bad":""}"><span class="bar"></span><div><p><b class="mono">${esc(a.o.code)}</b> · ${esc(point(a.o.point).ar)}</p><small>${a.msg} · ${esc(clinic(a.o.clinic).ar)}</small></div></div>`).join("")}</div>`:`<div class="okline">كل الزيارات تسير حسب الخطة.</div>`}
+        ${alerts.length?`<div class="alerts">${alerts.map(a=>`<div class="alert ${a.bad?"bad":""}" data-open="${esc(a.o.id)}" style="cursor:pointer"><span class="bar"></span><div><p><b class="mono">${esc(a.o.code)}</b> · ${esc(point(a.o.point).ar)}</p><small>${a.msg} · ${esc(clinic(a.o.clinic).ar)}</small></div></div>`).join("")}</div>`:`<div class="okline">كل الزيارات تسير حسب الخطة.</div>`}
       </section>
       <section class="panel"><div class="panel-h"><h2>العيادات</h2><a class="linkbtn" href="#clinics">كل العيادات ←</a></div>
         <div>${CLINICS.map(c=>{const pts=POINTS.filter(p=>p.clinic===c.id).length,st=S.staff.filter(s=>s.clinic===c.id).length,td=today.filter(o=>o.clinic===c.id).length;return `<div class="crow" style="--cc:${cv(c.c)}"><div>${clin(c.id)}<div class="meta">${esc(c.area)}</div></div><div class="meta" style="text-align:left">${pts} نقاط · ${st} كادر<br>${td} عملية اليوم</div><div class="meter"><i style="width:${Math.min(100,st/4*100)}%"></i></div></div>`}).join("")}</div>
@@ -738,10 +786,12 @@ function vReports(){
   return topbar("reports","التقارير","نتائج الزيارات: الاستشارات الطبية، فحوصات MUAC، وحالات سوء التغذية.")+`
   <div class="kpis">
     <div class="kpi"><span>إجمالي العمليات</span><b>${N(ops.length)}</b><small>نسبة الإنجاز ${pct}%</small></div>
-    <div class="kpi"><span>المستفيدون</span><b>${N(sum("ben"))}</b><small>رعاية أولية وتغذية</small></div>
-    <div class="kpi"><span>استشارات طبية</span><b>${N(sum("cons"))}</b><small>من تقارير الزيارات</small></div>
-    <div class="kpi alert"><span>سوء تغذية متوسط MAM</span><b>${N(sum("mam"))}</b><small>مسجّلة للمتابعة</small></div>
-    <div class="kpi" style="--x:0"><span>سوء تغذية حاد SAM</span><b style="color:var(--bad)">${N(sum("sam"))}</b><small>حُوّلت للعلاج</small></div>
+    <div class="kpi"><span>فُحصوا (MUAC)</span><b>${N(sum("scr"))}</b><small>من التقارير اليومية</small></div>
+    <div class="kpi alert"><span>إحالات MAM</span><b>${N(sum("mam"))}</b><small>أُحيلت للعيادة</small></div>
+    <div class="kpi" style="--x:0"><span>إحالات SAM</span><b style="color:var(--bad)">${N(sum("sam"))}</b><small>أُحيلت للعيادة</small></div>
+    <div class="kpi"><span>استلموا LNS-MQ</span><b>${N(sum("lns"))}</b><small>حالات BSFP مؤهلة</small></div>
+    <div class="kpi"><span>جلسات توعية / IYCF</span><b>${N(sum("aw"))} / ${N(sum("iycf"))}</b><small>أمهات متطوعات: ${N(sum("moms"))}</small></div>
+    <div class="kpi"><span>تغطية المخيمات</span><b>${new Set(done.map(o=>o.point)).size}/${POINTS.length}</b><small>نقطة زارها فريق</small></div>
   </div>
   <div class="grid2">
     <section class="panel"><div class="panel-h"><h2>العمليات حسب العيادة</h2></div><div class="panel-b bars">
@@ -754,11 +804,110 @@ function vReports(){
     <div>${top.map((p,i)=>`<div class="crow"><div><b class="num">${i+1}.</b> ${esc(p.ar)}<div class="meta">${esc(clinic(p.clinic).ar)}</div></div><div class="num">${p.v} زيارة</div></div>`).join("")}</div></section>
   </div>
   <section class="panel"><div class="panel-h"><h2>تقارير الزيارات المكتملة</h2><button class="btn sm" data-act="csv-rep">تصدير CSV</button></div>
-  ${done.length?`<div class="tbl-wrap"><table><thead><tr><th>الكود</th><th>التاريخ</th><th>النقطة</th><th>المستفيدون</th><th>استشارات</th><th>MAM</th><th>SAM</th><th>ملاحظات</th></tr></thead><tbody>
-  ${sortOps(done).reverse().map(o=>`<tr class="click" data-open="${esc(o.id)}"><td class="mono">${esc(o.code)}</td><td class="mono">${esc(o.date)}</td><td>${esc(point(o.point).ar)}<span class="sub">${esc(clinic(o.clinic).ar)}</span></td><td class="num">${N(rep(o).ben)}</td><td class="num">${N(rep(o).cons)}</td><td class="num">${N(rep(o).mam)}</td><td class="num">${N(rep(o).sam)}</td><td>${esc(rep(o).note||"")}</td></tr>`).join("")}
+  ${done.length?`<div class="tbl-wrap"><table><thead><tr><th>الكود</th><th>التاريخ</th><th>النقطة</th><th>فُحصوا</th><th>MAM</th><th>SAM</th><th>LNS-MQ</th><th>توعية</th><th>IYCF</th><th>أمهات</th><th>عوائق / ملاحظات</th></tr></thead><tbody>
+  ${sortOps(done).reverse().map(o=>`<tr class="click" data-open="${esc(o.id)}"><td class="mono">${esc(o.code)}</td><td class="mono">${esc(o.date)}</td><td>${esc(point(o.point).ar)}<span class="sub">${esc(clinic(o.clinic).ar)}</span></td><td class="num">${N(rep(o).scr??rep(o).ben)}</td><td class="num">${N(rep(o).mam)}</td><td class="num">${N(rep(o).sam)}</td><td class="num">${N(rep(o).lns)}</td><td class="num">${N(rep(o).aw)}</td><td class="num">${N(rep(o).iycf)}</td><td class="num">${N(rep(o).moms)}</td><td>${esc([rep(o).access,rep(o).note].filter(Boolean).join(" · "))}</td></tr>`).join("")}
   </tbody></table></div>`:`<div class="empty"><b>لا توجد تقارير بعد</b>عند تحويل أي عملية إلى "مكتملة" يُطلب إدخال نتائج الزيارة وتظهر هنا.</div>`}</section>`}
 
-const RENDER={admin:vAdmin,overview:vOverview,ops:vOps,week:vWeek,clinics:vClinics,points:vPoints,staff:vStaff,reports:vReports};
+/* ---------- coordination & readiness (Mohammed's role in the outreach plan) ---------- */
+const vtChip=o=>o.vtype?`<span class="vt ${o.vtype==="D2"?"d2":""}">${o.vtype==="D2"?"اليوم الثاني":"اليوم الأول"}</span>`:"";
+const rbar=o=>{const n=readyN(o);return `<span class="rbar ${n===CHECKS.length?"full":""}" title="الجاهزية قبل الزيارة"><span class="track"><i style="width:${n/CHECKS.length*100}%"></i></span>${n}/${CHECKS.length}</span>`};
+const telA=ph=>ph?`<a class="tel" href="tel:${esc(String(ph).replace(/[^\d+]/g,""))}">${esc(ph)}</a>`:"";
+const openReport=o=>o.date<todayISO()&&!["Completed","OnHold"].includes(o.status);
+function copText(list,ds){
+  const d=new Date(ds+"T00:00");
+  return [`زيارات Outreach · ${fmtDay(d)} ${ds}`,...list.map((o,i)=>{const s=o.siteFP||{},m=CHECKS.filter(([k])=>!chk(o)[k]).map(([,l])=>l);
+    return `${i+1}) ${point(o.point).ar} (${clinic(o.clinic).ar})${o.vtype?" · "+(o.vtype==="D2"?"اليوم الثاني":"اليوم الأول"):""}${o.dep?" · الانطلاق "+o.dep:""}\n   الجاهزية ${readyN(o)}/${CHECKS.length}${m.length?" · ناقص: "+m.join("، "):" · مكتملة"}${s.name?"\n   مسؤول المخيم: "+s.name+(s.phone?" "+s.phone:""):""}${o.protection?"\n   الحماية: "+o.protection:""}`})].join("\n")}
+function copCard(o){
+  const s=o.siteFP||{},lead=(o.team||[]).find(t=>t.id===o.leader),w=canWrite();
+  return `<article class="cop" style="--cc:${cv(clinic(o.clinic).c)}">
+    <div><h3>${esc(point(o.point).ar)} ${vtChip(o)}</h3><div class="meta">${esc(clinic(o.clinic).ar)} · <span class="mono">${esc(o.code)}</span>${o.dep?` · الانطلاق <span class="mono">${esc(o.dep)}</span>`:""}</div>${o.flag?`<span class="flag">تحتاج تأكيد: ${esc(o.flag)}</span>`:""}</div>
+    <div class="side">${rbar(o)}${chip(o.status)}</div>
+    <div class="row ready">${CHECKS.map(([k,l])=>`<button type="button" class="rk ${chk(o)[k]?"on":""}" data-act="tog" data-id="${esc(o.id)}" data-k="${k}" ${w?"":"disabled"} aria-pressed="${chk(o)[k]?"true":"false"}">${l}</button>`).join("")}</div>
+    <div class="row"><span><span class="muted">مسؤول المخيم:</span> ${s.name?`<b>${esc(s.name)}</b> ${telA(s.phone)}`:'<span class="muted">لم يُسجَّل بعد</span>'}</span>
+      <span><span class="muted">الحماية:</span> ${o.protection?esc(o.protection):'<span class="muted">غير محدد</span>'}</span>
+      <span><span class="muted">Focal Point:</span> ${lead?`${esc(lead.name)} ${telA(lead.phone)}`:'<span class="muted">لم يُحدد الفريق</span>'}</span>
+      <button class="btn sm" data-open="${esc(o.id)}" style="margin-inline-start:auto">فتح وتعديل</button></div></article>`}
+function vReady(){
+  const t=todayISO(),d1=nextWorkDay(t),d2=nextWorkDay(d1),fc=S.f.rdClinic||"";
+  const ops=S.ops.filter(o=>!fc||o.clinic===fc);
+  const days=[[t,"اليوم"],[d1,"يوم العمل التالي"],[d2,"بعده"]].filter(([d],i)=>i>0||ops.some(o=>o.date===d));
+  const up=ops.filter(o=>days.some(([d])=>d===o.date)&&o.status!=="OnHold");
+  const late=sortOps(ops.filter(openReport)),flags=sortOps(ops.filter(o=>o.flag&&o.date>=t));
+  const plan=S.ops.filter(o=>o.plan==="nov26");
+  return topbar("ready","التنسيق والجاهزية","")+`
+  ${!plan.length&&canWrite()?`<div class="banner localbar"><span>خطة التغذية المتكاملة لشهر نوفمبر 2026 غير مدرجة بعد: 22 مخيماً، 44 يوم زيارة، مع مشاركي الحماية من الخطة.</span><span class="filters"><button class="btn sm primary" data-act="import-plan">إدراج زيارات الخطة</button></span></div>`:""}
+  <div class="kpis">
+    <div class="kpi"><span>زيارات قادمة</span><b>${N(up.length)}</b><small>اليوم ويوما العمل التاليان</small></div>
+    <div class="kpi good"><span>جاهزة للتحرك</span><b>${N(up.filter(isReady).length)}</b><small>اكتملت التأكيدات الأربعة</small></div>
+    <div class="kpi ${up.some(o=>!chk(o).site)?"alert":""}"><span>بانتظار مسؤول المخيم</span><b>${N(up.filter(o=>!chk(o).site).length)}</b><small>اتصل وأكّد الموعد والحشد</small></div>
+    <div class="kpi ${late.length?"alert":""}"><span>تقارير لم تُسلَّم</span><b>${N(late.length)}</b><small>زيارات مضت ولم تُغلق</small></div>
+    ${plan.length?`<div class="kpi"><span>تقدّم الخطة</span><b>${N(plan.filter(o=>o.status==="Completed").length)}/${plan.length}</b><small>يوم زيارة منجز</small></div>`:""}
+  </div>
+  <div class="filters"><select data-f="rdClinic" aria-label="العيادة">${clinicOpts(fc,"كل العيادات")}</select><span class="meta">قاعدة الخطة: لا يتحرك الفريق قبل تأكيد مسؤول العيادة ومسؤول المخيم والنقل والأمن.</span></div>
+  ${days.map(([d,l])=>{const list=sortOps(ops.filter(o=>o.date===d));const dd=new Date(d+"T00:00");return `<div class="dayhead"><h2>${l} · ${fmtDay(dd)} <span class="mono">${d}</span></h2><div class="filters"><span class="meta">${list.length} زيارة · ${list.filter(isReady).length} جاهزة</span>${list.length?`<button class="btn sm" data-act="copy-day" data-d="${d}">نسخ ملخص اليوم</button>`:""}</div></div>
+    ${list.length?`<div class="coord">${list.map(copCard).join("")}</div>`:`<div class="empty" style="padding:16px">لا توجد زيارات في هذا اليوم.</div>`}`}).join("")}
+  <div class="grid2" style="margin-top:18px">
+    <section class="panel"><div class="panel-h"><h2>تقارير يومية لم تُسلَّم</h2><span class="chip ${late.length?"s-Delayed":"s-Completed"}">${late.length}</span></div>
+      ${late.length?`<div class="alerts">${late.map(o=>`<div class="alert click" data-open="${esc(o.id)}" style="cursor:pointer"><span class="bar"></span><div><p><b>${esc(point(o.point).ar)}</b> · <span class="mono">${esc(o.date)}</span></p><small>${esc(clinic(o.clinic).ar)} · الحالة: ${ST[o.status]||o.status}. أغلقها بتقرير «مكتملة» أو أجّلها.</small></div></div>`).join("")}</div>`:`<div class="okline">كل الزيارات الماضية أُغلقت بتقارير.</div>`}</section>
+    <section class="panel"><div class="panel-h"><h2>بنود تحتاج تأكيد من الخطة</h2><span class="chip ${flags.length?"s-Delayed":"s-Completed"}">${flags.length}</span></div>
+      ${flags.length?`<div class="alerts">${flags.map(o=>`<div class="alert click" data-open="${esc(o.id)}" style="cursor:pointer"><span class="bar"></span><div><p><b>${esc(point(o.point).ar)}</b> · <span class="mono">${esc(o.date)}</span></p><small>${esc(o.flag)}</small></div></div>`).join("")}</div>`:`<div class="okline">لا توجد بنود معلّقة.</div>`}</section>
+  </div>`}
+async function toggleCheck(id,k){
+  const o=S.ops.find(x=>x.id===id);if(!o||!canWrite())return;
+  const checks={...chk(o),[k]:!chk(o)[k]};const nx={...o,checks};
+  if(CHECKS.every(([c])=>checks[c])&&o.status==="Planned")nx.status="Ready";
+  else if(!CHECKS.every(([c])=>checks[c])&&o.status==="Ready")nx.status="Planned";
+  const {id:_,...body}=nx;body.updatedAt=new Date().toISOString();
+  if(await put("ops",id,body))toast(nx.status==="Ready"&&o.status!=="Ready"?`${point(o.point).ar}: جاهزة للتحرك`:`${point(o.point).ar}: الجاهزية ${readyN(nx)}/${CHECKS.length}`)}
+async function copyDay(ds){
+  const list=sortOps(S.ops.filter(o=>o.date===ds&&(!S.f.rdClinic||o.clinic===S.f.rdClinic)));const txt=copText(list,ds);
+  try{await navigator.clipboard.writeText(txt);toast("نُسخ الملخص. الصقه في واتساب أو البريد.")}catch(e){prompt("انسخ الملخص:",txt)}}
+
+/* Integrated Nutrition Outreach Plan — November 2026 (approved plan, section 9.3) */
+const PLAN_NOV26=[
+ // [point, clinic, day1, day2, protection day1, protection day2, flag]
+ ["LOC-001","CLN-001","2026-11-16","2026-11-22","Ali Siama","Aisha Al Jafarwi"],
+ ["LOC-002","CLN-001","2026-11-17","2026-11-23","Aisha Al Jafarwi","Ali Siama"],
+ ["LOC-028","CLN-006","2026-11-16","2026-11-22","Mahmoud Jahjouh","Mahmoud Jahjouh"],
+ ["LOC-020","CLN-006","2026-11-17","2026-11-23","Mahmoud Jahjouh","Mahmoud Jahjouh"],
+ ["LOC-021","CLN-006","2026-11-18","2026-11-24","","Mahmoud Jahjouh"],
+ ["LOC-027","CLN-004","2026-11-16","2026-11-22","Alaa Youins","Alaa Youins"],
+ ["LOC-009","CLN-004","2026-11-17","2026-11-23","Alaa Youins","Alaa Youins"],
+ ["LOC-011","CLN-004","2026-11-18","2026-11-24","Alaa Youins","Alaa Youins"],
+ ["LOC-012","CLN-004","2026-11-19","2026-11-25","Alaa Youins",""],
+ ["LOC-005","CLN-003","2026-11-16","2026-11-22","Nour Alqubti","Nour Alqubti"],
+ ["LOC-006","CLN-003","2026-11-17","2026-11-23","Nour Alqubti","Nour Alqubti"],
+ ["LOC-007","CLN-003","2026-11-18","2026-11-24","Nour Alqubti","Nour Alqubti"],
+ ["LOC-023","CLN-007","2026-11-19","2026-11-25","Fadi alnjjar",""],
+ ["LOC-024","CLN-007","2026-11-22","2026-11-26","Fadi alnjjar",""],
+ ["LOC-025","CLN-007","2026-11-23","2026-11-29","Fadi alnjjar",""],
+ ["LOC-026","CLN-007","2026-11-24","2026-11-30","Fadi alnjjar",""],
+ ["LOC-003","CLN-002","2026-11-19","2026-11-29","","","مشاركة الحماية مكتوبة في الخطة لـ16 و22 نوفمبر (Ali Siama / Aisha Al Jafarwi) ولا تطابق موعدَي هذه الزيارة، والاسمان في الكرامة بنفس التاريخين"],
+ ["LOC-004","CLN-002","2026-11-22","2026-11-30","","Aisha Al Jafarwi"],
+ ["LOC-013","CLN-005","2026-11-19","2026-11-25","Reham Alngele",""],
+ ["LOC-014","CLN-005","2026-11-22","2026-11-26","Reham Alngele","Areej basher"],
+ ["LOC-015","CLN-005","2026-11-23","2026-11-29","Areej basher","Areej basher"],
+ ["LOC-017","CLN-005","2026-11-24","2026-11-30","Areej basher","Areej basher"]];
+function planOps(){
+  const out=[];
+  PLAN_NOV26.forEach(([pt,cl,a,b,pa,pb,fl])=>[[a,"D1",pa],[b,"D2",pb]].forEach(([d,vt,pr])=>{
+    out.push({id:`nov26-${pt}-${vt}`,data:{code:"",date:d,clinic:cl,point:pt,service:"Integrated Outreach",status:"Planned",dep:"",ret:"",team:[],leader:null,notes:"",
+      vtype:vt,plan:"nov26",protection:pr,siteFP:{name:"",phone:""},checks:{},supplies:{},flag:fl||(pr?"":"لم تُحدَّد مشاركة الحماية في الخطة لهذا اليوم"),createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()}})}));
+  out.sort((x,y)=>(x.data.date+x.data.clinic+x.data.point).localeCompare(y.data.date+y.data.clinic+y.data.point));
+  out.forEach((r,i)=>r.data.code="NOV-"+String(i+1).padStart(2,"0"));
+  return out}
+async function importPlan(btn){
+  if(!canWrite()){toast("سجّل الدخول أولاً.");return}
+  const rows=planOps().filter(r=>!S.ops.some(o=>o.id===r.id));
+  if(!rows.length){toast("زيارات الخطة مدرجة مسبقاً.");return}
+  if(btn){btn.disabled=true;btn.textContent="جارٍ الإدراج…"}
+  if(supaOn()){const now=new Date().toISOString();const {error}=await sb.from("records").upsert(rows.map(r=>({collection:"ops",id:r.id,data:r.data,updated_at:now})));
+    if(error){toast(supaErr(error));if(btn){btn.disabled=false;btn.textContent="إدراج زيارات الخطة"}return}
+    rows.forEach(r=>supaApply({collection:"ops",id:r.id,data:r.data},false));render()}
+  else for(const r of rows)await put("ops",r.id,r.data);
+  toast(`أُدرجت ${rows.length} زيارة من خطة نوفمبر`);location.hash="ready"}
+
+const RENDER={admin:vAdmin,overview:vOverview,ready:vReady,ops:vOps,week:vWeek,clinics:vClinics,points:vPoints,staff:vStaff,reports:vReports};
 function render(){
   const a=document.activeElement,id=a&&a.id,pos=a&&a.selectionStart;
   renderNav();$("#view").innerHTML=RENDER[cur()]();
@@ -769,9 +918,9 @@ function render(){
 const staffPhone=id=>(S.staff.find(s=>s.id===id)||{}).phone||"";
 function openOp(op,preset={}){
   const isNew=!op;
-  const o=op?JSON.parse(JSON.stringify(op)):{id:newId("op"),code:"OUT-"+new Date().getFullYear()+"-"+String(Math.floor(100+Math.random()*900)),date:preset.date||todayISO(),clinic:preset.clinic||S.f.clinic||"CLN-001",point:"",service:"Health + Nutrition",status:"Planned",dep:"09:00",ret:"13:00",team:[],leader:null,notes:""};
+  const o=op?JSON.parse(JSON.stringify(op)):{id:newId("op"),code:"OUT-"+new Date().getFullYear()+"-"+String(Math.floor(100+Math.random()*900)),date:preset.date||todayISO(),clinic:preset.clinic||S.f.clinic||"CLN-001",point:"",service:"Integrated Outreach",status:"Planned",dep:"09:00",ret:"13:00",team:[],leader:null,notes:"",vtype:"D1",siteFP:{name:"",phone:""},checks:{},supplies:{},protection:""};
   if(!o.point)o.point=(POINTS.find(p=>p.clinic===o.clinic)||{}).id;
-  o.team=o.team||[];
+  o.team=o.team||[];o.checks=o.checks||{};o.supplies=o.supplies||{};o.siteFP=o.siteFP||{name:"",phone:""};
   if(!o.leader){const tl=o.team.find(t=>t.role==="Team Leader");if(tl)o.leader=tl.id}
   o.leadPhone=o.leader?(staffPhone(o.leader)||(o.team.find(t=>t.id===o.leader)||{}).phone||""):"";
   const ro=!canWrite();
@@ -793,17 +942,26 @@ function openOp(op,preset={}){
     <div class="field" style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><div class="field"><label for="o-dep">الانطلاق</label><input id="o-dep" type="time" value="${esc(o.dep)}"></div><div class="field"><label for="o-ret">العودة</label><input id="o-ret" type="time" value="${esc(o.ret)}"></div></div>
     <div class="field"><label for="o-service">نوع الخدمة</label><select id="o-service">${opts(SERVICES,o.service)}</select></div>
     <div class="field"><label for="o-status">الحالة</label><select id="o-status">${opts(STATUSES,o.status)}</select></div>
+    <div class="prep"><div class="ttl"><span>التنسيق قبل الزيارة</span><span id="o-rbar">${rbar(o)}</span></div>
+      <div class="field"><label for="o-vtype">نوع الزيارة</label><select id="o-vtype">${opts(VTYPES,o.vtype||"","—")}</select></div>
+      <div class="field"><label for="o-prot">مشارك الحماية</label><input id="o-prot" value="${esc(o.protection||"")}" placeholder="من خطة التوزيع"></div>
+      <div class="field"><label for="o-sfn">مسؤول المخيم (Site Focal Point)</label><input id="o-sfn" value="${esc(o.siteFP.name||"")}" placeholder="الاسم"></div>
+      <div class="field"><label for="o-sfp">هاتف مسؤول المخيم</label><input id="o-sfp" type="tel" dir="ltr" value="${esc(o.siteFP.phone||"")}" placeholder="059xxxxxxx"></div>
+      <div class="full"><p class="sub2">التأكيدات الأربعة (تصبح الزيارة «جاهزة» تلقائياً عند اكتمالها)</p><div class="ticks">${CHECKS.map(([k,l])=>`<label><input type="checkbox" data-chk="${k}" ${o.checks[k]?"checked":""}>${l}</label>`).join("")}</div></div>
+      <div class="full"><p class="sub2">مستلزمات الفريق</p><div class="ticks">${SUPPLIES.map(([k,l])=>`<label><input type="checkbox" data-sup="${k}" ${o.supplies[k]?"checked":""}>${l}</label>`).join("")}</div></div>
+      <div class="field full"><label for="o-flag">بند يحتاج تأكيد</label><input id="o-flag" value="${esc(o.flag||"")}" placeholder="اتركه فارغاً عند حسم البند"></div>
+      ${(o.postponed||[]).length?`<div class="full"><p class="sub2">سجل التأجيل</p><ul class="hist">${o.postponed.map(h=>`<li><span class="mono">${esc(h.from)}</span> ← <span class="mono">${esc(h.to)}</span>${h.reason?" · "+esc(h.reason):""}</li>`).join("")}</ul></div>`:""}
+    </div>
     <div class="field full"><label>الفريق <span id="teamCount" class="muted"></span></label><div class="team" id="teamBox"></div><div id="leadBox"></div>
       <div class="inline-add"><input id="na-name" placeholder="اسم موظف جديد" aria-label="اسم الموظف"><select id="na-role" aria-label="المسمى">${opts(ROLES,"Doctor")}</select><input id="na-phone" dir="ltr" placeholder="059…" aria-label="الهاتف"><button type="button" class="btn sm" data-addstaff>+ إضافة للفريق</button></div></div>
-    <div class="report" id="repBox" hidden><div class="ttl">نتائج الزيارة</div>
-      <div class="field"><label for="r-ben">المستفيدون</label><input id="r-ben" type="number" min="0" inputmode="numeric" value="${esc(rep(o).ben??"")}"></div>
-      <div class="field"><label for="r-cons">استشارات طبية</label><input id="r-cons" type="number" min="0" inputmode="numeric" value="${esc(rep(o).cons??"")}"></div>
-      <div class="field"><label for="r-mam">حالات MAM</label><input id="r-mam" type="number" min="0" inputmode="numeric" value="${esc(rep(o).mam??"")}"></div>
-      <div class="field"><label for="r-sam">حالات SAM</label><input id="r-sam" type="number" min="0" inputmode="numeric" value="${esc(rep(o).sam??"")}"></div>
-      <div class="field" style="grid-column:1/-1"><label for="r-note">ملاحظة التقرير</label><input id="r-note" value="${esc(rep(o).note||"")}" placeholder="مثال: نفاد حليب علاجي، تحويل حالتين للمستشفى"></div></div>
+    <div class="report" id="repBox" hidden><div class="ttl">التقرير اليومي للزيارة</div>
+      ${REPF.map(([k,l])=>`<div class="field"><label for="r-${k}">${l}</label><input id="r-${k}" type="number" min="0" inputmode="numeric" value="${esc(rep(o)[k]??"")}"></div>`).join("")}
+      <div class="field" style="grid-column:1/-1"><label>المحاور المتكاملة المقدمة</label><div class="ticks">${TOPICS.map(([k,l])=>`<label><input type="checkbox" data-top="${k}" ${(rep(o).topics||[]).includes(k)?"checked":""}>${l}</label>`).join("")}</div></div>
+      <div class="field" style="grid-column:1/-1"><label for="r-acc">عوائق الوصول</label><input id="r-acc" value="${esc(rep(o).access||"")}" placeholder="مثال: تأخر التصريح الأمني ساعة"></div>
+      <div class="field" style="grid-column:1/-1"><label for="r-note">ملاحظات وملاحظات المجتمع</label><input id="r-note" value="${esc(rep(o).note||"")}" placeholder="الملاحظات والإجراءات التالية"></div></div>
     <div class="field full"><label for="o-notes">ملاحظات</label><textarea id="o-notes" rows="2" placeholder="المستلزمات الطبية، التنسيق مع المجتمع، ملاحظات التنقل…">${esc(o.notes||"")}</textarea></div>
   </fieldset>
-  <div class="dlg-f"><div class="filters">${!isNew&&!ro&&S.admin?`<button type="button" class="btn danger" data-del>حذف</button>`:""}${!isNew?`<button type="button" class="btn" data-export>بطاقة الزيارة PDF / JPG</button>`:""}</div><div class="filters"><button type="button" class="btn" data-x>${ro?"إغلاق":"إلغاء"}</button>${ro?"":`<button type="submit" class="btn primary">${isNew?"حفظ وإعداد بطاقة الزيارة":"حفظ التعديلات"}</button>`}</div></div>`;
+  <div class="dlg-f"><div class="filters">${!isNew&&!ro&&S.admin?`<button type="button" class="btn danger" data-del>حذف</button>`:""}${!isNew&&!ro&&o.status!=="Completed"?`<button type="button" class="btn" data-postpone>تأجيل ليوم العمل التالي</button>`:""}${!isNew?`<button type="button" class="btn" data-export>بطاقة الزيارة PDF / JPG</button>`:""}</div><div class="filters"><button type="button" class="btn" data-x>${ro?"إغلاق":"إلغاء"}</button>${ro?"":`<button type="submit" class="btn primary">${isNew?"حفظ وإعداد بطاقة الزيارة":"حفظ التعديلات"}</button>`}</div></div>`;
   const fillPoints=()=>{const pts=POINTS.filter(p=>p.clinic===o.clinic);if(!pts.some(p=>p.id===o.point))o.point=pts[0]?.id;$("#o-point").innerHTML=opts(pts.map(p=>[p.id,`${p.ar} (${PT_TYPES[p.type]||p.type})`]),o.point);showCoords()};
   const showCoords=()=>{const p=point(o.point),el=$("#o-coords");if(!el)return;el.innerHTML=p.lat!==""&&p.lat!=null&&p.lat!==undefined?`<span class="mono">${(+p.lat).toFixed(5)}, ${(+p.lon).toFixed(5)}</span> · <a href="${mapsUrl(p.lat,p.lon)}" target="_blank" rel="noopener">فتح في الخرائط</a>`:"لا توجد إحداثيات لهذا المكان"};
   const fillTeam=()=>{$("#teamBox").innerHTML=teamHTML();$("#leadBox").innerHTML=leadHTML();$("#teamCount").textContent=`· تم اختيار ${o.team.length}`};
@@ -815,6 +973,8 @@ function openOp(op,preset={}){
     if(t.id==="o-clinic"){o.clinic=t.value;fillPoints();fillTeam()}
     if(t.id==="o-point"){o.point=t.value;showCoords()}
     if(t.id==="o-status")showRep();
+    if(t.dataset.chk){o.checks[t.dataset.chk]=t.checked;$("#o-rbar").innerHTML=rbar(o);const ss=$("#o-status");if(isReady(o)&&ss.value==="Planned")ss.value="Ready";else if(!isReady(o)&&ss.value==="Ready")ss.value="Planned"}
+    if(t.dataset.sup)o.supplies[t.dataset.sup]=t.checked;
     if(t.dataset.lead){setLeader(t.dataset.lead);fillTeam()}
     if(t.dataset.team){const id=t.dataset.team;const s=S.staff.find(x=>x.id===id)||o.team.find(x=>x.id===id);o.team=o.team.filter(x=>x.id!==id);
       if(t.checked&&s){o.team.push({id:s.id,name:s.name,role:s.role,phone:s.phone||""});if(!o.leader)setLeader(s.id)}
@@ -824,6 +984,10 @@ function openOp(op,preset={}){
     if(e.target.closest("[data-x]")){dlg.close();return}
     if(e.target.closest("[data-copyph]")){const inp=$("#lead-phone");try{await navigator.clipboard.writeText(o.leadPhone);toast("نُسخ الرقم "+o.leadPhone)}catch(err){inp.select()}return}
     if(e.target.closest("[data-export]")){showExport(S.ops.find(x=>x.id===o.id)||o);return}
+    if(e.target.closest("[data-postpone]")){const base=S.ops.find(x=>x.id===o.id);if(!base)return;const to=nextWorkDay(base.date);
+      const reason=prompt(`تأجيل ${point(base.point).ar} من ${base.date} إلى ${to} (يوم العمل التالي). سبب التأجيل:`,"قيود أمنية / وصول");if(reason===null)return;
+      const {id,...b}=base;const rec={...b,date:to,status:"Planned",checks:{},postponed:[...(base.postponed||[]),{from:base.date,to,reason:reason.trim(),at:new Date().toISOString()}],updatedAt:new Date().toISOString()};
+      if(await put("ops",id,rec)){dlg.close();toast(`أُجّلت إلى ${to}. أعد تأكيد الجاهزية.`)}return}
     if(e.target.closest("[data-addstaff]")){const name=$("#na-name").value.trim();if(!name){$("#na-name").focus();return}
       const s={id:newId("st"),name,role:$("#na-role").value,clinic:o.clinic,phone:$("#na-phone").value.trim()};
       const {id,...body}=s;if(await put("staff",id,body)){if(!S.staff.some(x=>x.id===id))S.staff.push(s);o.team.push({id,name,role:s.role,phone:s.phone});if(!o.leader)setLeader(id);$("#na-name").value=$("#na-phone").value="";fillTeam();toast("أُضيف "+name+" للفريق")}}
@@ -833,9 +997,11 @@ function openOp(op,preset={}){
     if(o.team.length&&!o.team.some(t=>t.id===o.leader)){$("#leadBox").scrollIntoView({block:"center"});toast("حدّد الـFocal Point قبل الحفظ");return}
     const lp=(o.leadPhone||"").trim(),st=$("#o-status").value;
     const team=o.team.map(t=>({id:t.id,name:t.name,role:t.role,phone:t.id===o.leader?lp:(staffPhone(t.id)||t.phone||"")}));
-    const rec={code:o.code,date:$("#o-date").value,clinic:o.clinic,point:$("#o-point").value,service:$("#o-service").value,status:st,dep:$("#o-dep").value,ret:$("#o-ret").value,team,leader:o.leader||null,notes:$("#o-notes").value.trim(),createdAt:o.createdAt||new Date().toISOString(),updatedAt:new Date().toISOString()};
-    if(st==="Completed"){const n=id=>{const v=$(id).value;return v===""?0:Math.max(0,parseInt(v,10)||0)};rec.report={ben:n("#r-ben"),cons:n("#r-cons"),mam:n("#r-mam"),sam:n("#r-sam"),note:$("#r-note").value.trim()}}
-    else if(o.report)rec.report=o.report;
+    if(st==="Ready"&&!isReady(o)){toast("لا تصبح الزيارة «جاهزة» قبل اكتمال التأكيدات الأربعة.");return}
+    const rec={...(op?Object.fromEntries(Object.entries(op).filter(([k])=>k!=="id")):{}),code:o.code,date:$("#o-date").value,clinic:o.clinic,point:$("#o-point").value,service:$("#o-service").value,status:st,dep:$("#o-dep").value,ret:$("#o-ret").value,team,leader:o.leader||null,notes:$("#o-notes").value.trim(),
+      vtype:$("#o-vtype").value,protection:$("#o-prot").value.trim(),siteFP:{name:$("#o-sfn").value.trim(),phone:$("#o-sfp").value.trim()},checks:{...o.checks},supplies:{...o.supplies},flag:$("#o-flag").value.trim(),createdAt:o.createdAt||new Date().toISOString(),updatedAt:new Date().toISOString()};
+    if(st==="Completed"){const n=id=>{const v=$(id).value;return v===""?0:Math.max(0,parseInt(v,10)||0)};rec.report={...Object.fromEntries(REPF.map(([k])=>[k,n("#r-"+k)])),topics:TOPICS.map(([k])=>k).filter(k=>form.querySelector(`[data-top="${k}"]`)?.checked),access:$("#r-acc").value.trim(),note:$("#r-note").value.trim()}}
+    else if(o.report)rec.report=o.report;else delete rec.report;
     if(!rec.date){$("#o-date").focus();return}
     if(await put("ops",o.id,rec)){
       const ls=S.staff.find(s=>s.id===o.leader);if(ls&&lp&&ls.phone!==lp){const {id,...b}=ls;put("staff",id,{...b,phone:lp})}
@@ -879,7 +1045,12 @@ async function drawSheet(o){
   if(pt.lat!==""&&pt.lat!=null&&isFinite(+pt.lat))txt(`${(+pt.lat).toFixed(4)}, ${(+pt.lon).toFixed(4)}`,R-half-24-half+24,y+44,`500 20px ${MO}`,C.muted,"left","ltr");
   y+=224;const q=(CW-3*20)/4;
   [[`التاريخ · ${fmtDay(d)}`,o.date,MO,500],["موعد الانطلاق",o.dep||"—",MO,500],["موعد العودة",o.ret||"—",MO,500],["نوع الخدمة",SV[o.service]||o.service,DS,600]].forEach(([l,v,fam,wt],i)=>{const xr=R-i*(q+20);box(xr-q,y,q,124,"#ffffff",C.line);txt(l,xr-22,y+44,`400 21px ${AR}`,C.muted);const f=fit(v,q-44,32,wt,fam);txt(v,xr-22,y+96,f,C.ink,"right",fam===MO?"ltr":"rtl")});
-  y+=190;const team=o.team||[];sec(`الفريق (${team.length})`,y);y+=30;
+  y+=148;{const s=o.siteFP||{},th=(CW-2*20)/3;
+    [["نوع الزيارة",VT[o.vtype]||"—",""],["مسؤول المخيم",s.name||"—",s.phone||""],["مشارك الحماية",o.protection||"—",""]].forEach(([l,v,ph],i)=>{const xr=R-i*(th+20);box(xr-th,y,th,ph?150:124,C.soft,null);txt(l,xr-22,y+42,`400 21px ${AR}`,C.muted);txt(v,xr-22,y+90,fit(v,th-44,30,600,DS),C.ink);if(ph)txt(ph,xr-22,y+130,`500 22px ${MO}`,C.ink,"right","ltr")});
+    y+=(o.siteFP&&o.siteFP.phone?150:124)+24;
+    const n=readyN(o);x.font=`600 22px ${AR}`;const lbl=`الجاهزية قبل الزيارة ${n}/${CHECKS.length}: `+CHECKS.map(([k,l])=>(chk(o)[k]?"✓ ":"✗ ")+l).join("  ·  ");
+    txt(lbl,R,y+6,fit(lbl,CW,22,500,AR),n===CHECKS.length?C.navy:C.red)}
+  y+=66;const team=o.team||[];sec(`الفريق (${team.length})`,y);y+=30;
   const fp=(cx,cy)=>{x.beginPath();x.arc(cx,cy,11,0,Math.PI*2);x.strokeStyle=C.teal;x.lineWidth=3;x.stroke();x.beginPath();x.arc(cx,cy,4.5,0,Math.PI*2);x.fillStyle=C.navy;x.fill()};
   const rows=[...team.filter(t=>t.id===o.leader),...team.filter(t=>t.id!==o.leader)].slice(0,10);
   if(rows.length){x.fillStyle=C.soft;x.fillRect(M,y,CW,52);txt("العضو",R-60,y+35,`600 21px ${AR}`,C.muted);txt("الدور",R-540,y+35,`600 21px ${AR}`,C.muted);txt("الهاتف",M+24,y+35,`600 21px ${AR}`,C.muted,"left");y+=52;
@@ -887,7 +1058,7 @@ async function drawSheet(o){
     if(team.some(t=>t.id===o.leader)){fp(R-32,y+30);txt("Focal Point",R-56,y+38,`500 22px ${AR}`,C.muted,"right","ltr");y+=50}}
   if(!team.length){txt("لم يُحدَّد الفريق بعد.",R,y+32,`400 25px ${AR}`,C.muted);y+=50}
   if(o.status==="Completed"&&o.report){y+=50;sec("نتائج الزيارة",y);y+=30;
-    [["المستفيدون",o.report.ben,C.soft,C.ink],["استشارات طبية",o.report.cons,C.soft,C.ink],["حالات MAM",o.report.mam,"#fdeab6",C.ink],["حالات SAM",o.report.sam,"#fbe1e8",C.red]].forEach(([l,v,bg,fg],i)=>{const xr=R-i*(q+20);box(xr-q,y,q,120,bg,null);txt(l,xr-22,y+42,`400 21px ${AR}`,C.muted);txt(N(v),xr-22,y+98,`600 40px ${DS}`,fg)});y+=140}
+    [["فُحصوا (MUAC)",o.report.scr??o.report.ben,C.soft,C.ink],["الإحالات MAM / SAM",`${N(o.report.mam)} / ${N(o.report.sam)}`,"#fdeab6",C.ink],["استلموا LNS-MQ",o.report.lns,C.soft,C.ink],["جلسات توعية",o.report.aw,C.soft,C.ink]].forEach(([l,v,bg,fg],i)=>{const xr=R-i*(q+20);box(xr-q,y,q,120,bg,null);txt(l,xr-22,y+42,`400 21px ${AR}`,C.muted);txt(typeof v==="string"?v:N(v),xr-22,y+98,`600 40px ${DS}`,fg)});y+=140}
   y+=50;sec("ملاحظات",y);y+=26;
   const maxLines=Math.max(1,Math.floor((H-300-y-40)/40));
   const nl=wrap(o.notes||"لا توجد ملاحظات.",`400 25px ${AR}`,CW-48).slice(0,Math.min(6,maxLines));
@@ -926,7 +1097,9 @@ async function exportCSV(name,rows){
   if(dl){try{await dl.save({filename:name,data:csv});return}catch(e){if(e&&e.code==="declined")return}}
   if(!window.claude){await saveFile(name,new Blob([csv],{type:"text/csv;charset=utf-8"}));return}
   try{await navigator.clipboard.writeText(csv);toast("نُسخ الجدول كـCSV. الصقه في Excel أو Google Sheets.")}catch(e){toast("تعذّر التصدير من هذا العرض.")}}
-const opsRows=()=>[["الكود","التاريخ","العيادة","النقطة","الخدمة","الحالة","الانطلاق","العودة","الفريق","المستفيدون","استشارات","MAM","SAM","ملاحظات"],...sortOps(S.ops).map(o=>[o.code,o.date,clinic(o.clinic).ar,point(o.point).ar,SV[o.service]||o.service,ST[o.status],o.dep,o.ret,(o.team||[]).map(t=>t.name).join(" / "),rep(o).ben??"",rep(o).cons??"",rep(o).mam??"",rep(o).sam??"",o.notes])];
+const opsRows=()=>[["الكود","التاريخ","العيادة","النقطة","نوع الزيارة","الخدمة","الحالة","الجاهزية","مسؤول المخيم","هاتف المسؤول","الحماية","الانطلاق","العودة","الفريق",...REPF.map(([,l])=>l),"المحاور","عوائق الوصول","ملاحظات التقرير","تحتاج تأكيد","ملاحظات"],
+  ...sortOps(S.ops).map(o=>[o.code,o.date,clinic(o.clinic).ar,point(o.point).ar,VT[o.vtype]||"",SV[o.service]||o.service,ST[o.status],`${readyN(o)}/${CHECKS.length}`,(o.siteFP||{}).name||"",(o.siteFP||{}).phone||"",o.protection||"",o.dep,o.ret,(o.team||[]).map(t=>t.name).join(" / "),
+    ...REPF.map(([k])=>rep(o)[k]??""),(rep(o).topics||[]).map(k=>(TOPICS.find(x=>x[0]===k)||[,k])[1]).join(" / "),rep(o).access||"",rep(o).note||"",o.flag||"",o.notes])];
 
 /* ---------- events ---------- */
 document.addEventListener("click",async e=>{
@@ -934,6 +1107,9 @@ document.addEventListener("click",async e=>{
   const a=e.target.closest("[data-act]");
   if(a){const act=a.dataset.act;
     if(act==="new-op")openOp(null,{date:a.dataset.date,clinic:a.dataset.clinic});
+    if(act==="tog"){await toggleCheck(a.dataset.id,a.dataset.k);return}
+    if(act==="copy-day"){copyDay(a.dataset.d);return}
+    if(act==="import-plan"){importPlan(a);return}
     if(act==="reset"){Object.assign(S.f,{clinic:"",status:"",service:"",range:"today",q:""});render()}
     if(act==="wk"){S.f.weekOffset=a.dataset.d==="0"?0:S.f.weekOffset+Number(a.dataset.d);render()}
     if(act==="admin-toggle"&&supaOn()){if(S.user){await sb.auth.signOut();toast("سجّلت الخروج")}else supaLogin();return}
@@ -953,7 +1129,7 @@ document.addEventListener("click",async e=>{
     if(act==="ent-del")deleteEntity(a.dataset.kind,a.dataset.id);
     if(act==="backup"){const data=JSON.stringify({app:"outreach-ops",exportedAt:new Date().toISOString(),ops:S.ops,staff:S.staff,config:S.config},null,2);saveFile(`outreach-backup_${todayISO()}.json`,new Blob([data],{type:"application/json"}))}
     if(act==="csv-ops")exportCSV("outreach-operations.csv",opsRows());
-    if(act==="csv-rep")exportCSV("outreach-visit-reports.csv",opsRows().filter((r,i)=>i===0||r[5]===ST.Completed));
+    if(act==="csv-rep")exportCSV("outreach-visit-reports.csv",opsRows().filter((r,i)=>i===0||r[6]===ST.Completed));
     if(act==="edit-staff"){S.editStaff=a.dataset.id;render();$("#sf-name")?.focus()}
     if(act==="cancel-staff"){S.editStaff=null;render()}
     if(act==="ask-del"){S.confirmDel=a.dataset.id;render()}
@@ -971,6 +1147,8 @@ document.addEventListener("change",async e=>{
   if(t.dataset.f){S.f[t.dataset.f]=t.value;render();return}
   if(t.dataset.status){const o=S.ops.find(x=>x.id===t.dataset.status);if(!o)return;
     if(t.value==="Completed"){const copy={...o,status:"Completed"};t.value=o.status;openOp(copy);return}
+    if(t.value==="Ready"&&!isReady(o)){t.value=o.status;toast("لا تصبح الزيارة «جاهزة» قبل اكتمال التأكيدات الأربعة: "+CHECKS.filter(([k])=>!chk(o)[k]).map(([,l])=>l).join("، "));return}
+    if(ACTIVE.includes(t.value)&&!isReady(o))toast("تنبيه: الفريق تحرك قبل اكتمال تأكيدات الجاهزية.");
     const {id,...body}=o;await put("ops",id,{...body,status:t.value,updatedAt:new Date().toISOString()});toast(`${o.code}: ${ST[t.value]}`)}
 });
 document.addEventListener("input",e=>{if(e.target.id==="q"){S.f.q=e.target.value;clearTimeout(render.t);render.t=setTimeout(render,180)}});
