@@ -825,7 +825,7 @@ function copCard(o){
     <div class="row ready">${CHECKS.map(([k,l])=>`<button type="button" class="rk ${chk(o)[k]?"on":""}" data-act="tog" data-id="${esc(o.id)}" data-k="${k}" ${w?"":"disabled"} aria-pressed="${chk(o)[k]?"true":"false"}">${l}</button>`).join("")}</div>
     <div class="row"><span><span class="muted">مسؤول المخيم:</span> ${s.name?`<b>${esc(s.name)}</b> ${telA(s.phone)}`:'<span class="muted">لم يُسجَّل بعد</span>'}</span>
       <span><span class="muted">الحماية:</span> ${o.protection?esc(o.protection):'<span class="muted">غير محدد</span>'}</span>
-      <span><span class="muted">Focal Point:</span> ${lead?`${esc(lead.name)} ${telA(lead.phone)}`:'<span class="muted">لم يُحدد الفريق</span>'}</span>
+      <span><span class="muted">${lead?"Focal Point":"الفريق"}:</span> ${lead?`${esc(lead.name)} ${telA(lead.phone)}`:(o.team||[]).length?plural(o.team.length):'<span class="muted">لم يُحدد بعد</span>'}</span>
       <button class="btn sm" data-open="${esc(o.id)}" style="margin-inline-start:auto">فتح وتعديل</button></div></article>`}
 function vReady(){
   const t=todayISO(),d1=nextWorkDay(t),d2=nextWorkDay(d1),fc=S.f.rdClinic||"";
@@ -921,7 +921,6 @@ function openOp(op,preset={}){
   const o=op?JSON.parse(JSON.stringify(op)):{id:newId("op"),code:"OUT-"+new Date().getFullYear()+"-"+String(Math.floor(100+Math.random()*900)),date:preset.date||todayISO(),clinic:preset.clinic||S.f.clinic||"CLN-001",point:"",service:"Integrated Outreach",status:"Planned",dep:"09:00",ret:"13:00",team:[],leader:null,notes:"",vtype:"D1",siteFP:{name:"",phone:""},checks:{},supplies:{},protection:""};
   if(!o.point)o.point=(POINTS.find(p=>p.clinic===o.clinic)||{}).id;
   o.team=o.team||[];o.checks=o.checks||{};o.supplies=o.supplies||{};o.siteFP=o.siteFP||{name:"",phone:""};
-  if(!o.leader){const tl=o.team.find(t=>t.role==="Team Leader");if(tl)o.leader=tl.id}
   o.leadPhone=o.leader?(staffPhone(o.leader)||(o.team.find(t=>t.id===o.leader)||{}).phone||""):"";
   const ro=!canWrite();
   const dlg=$("#opDlg"),form=$("#opForm");
@@ -931,9 +930,9 @@ function openOp(op,preset={}){
     const all=[...mine.map(s=>row(s,"طاقم العيادة")),...other.map(s=>row(s,clinic(s.clinic).ar)),...extra.map(t=>row(t,"محذوف من السجل"))];
     return all.length?all.join(""):`<div class="empty" style="padding:14px">لا يوجد كوادر بعد. أضف موظفاً من الأسفل.</div>`};
   const leadHTML=()=>{if(!o.team.length)return "";const l=o.team.find(x=>x.id===o.leader);
-    if(!l)return `<div class="leadbar need">اختر الـFocal Point بالضغط على «Focal Point» بجانب أحد الأعضاء المختارين.</div>`;
+    if(!l)return `<div class="leadbar" style="border-style:dashed;border-color:var(--line);background:var(--sunk)"><span class="muted" style="font-size:13px">بدون Focal Point. تحديده اختياري: اضغط «Focal Point» بجانب أي عضو إذا أردت.</span></div>`;
     return `<div class="leadbar"><div class="who"><span class="avatar">${esc(l.name.trim()[0]||"؟")}</span><div><small>Focal Point</small><b>${esc(l.name)}</b><small>${esc(RL[l.role]||l.role)}</small></div></div>
-      <div class="ph"><label for="lead-phone">رقم الاتصال</label><div class="phrow"><input id="lead-phone" type="tel" dir="ltr" value="${esc(o.leadPhone)}" placeholder="059xxxxxxx" ${ro?"disabled":""}><button type="button" class="btn sm" data-copyph ${o.leadPhone?"":"disabled"}>نسخ</button></div>${o.leadPhone?"":'<small class="hint">لا يوجد رقم مسجّل لهذا الكادر. أدخله هنا ويُحفظ في سجله أيضاً.</small>'}</div></div>`};
+      <div class="ph"><label for="lead-phone">رقم الاتصال</label><div class="phrow"><input id="lead-phone" type="tel" dir="ltr" value="${esc(o.leadPhone)}" placeholder="059xxxxxxx" ${ro?"disabled":""}><button type="button" class="btn sm" data-copyph ${o.leadPhone?"":"disabled"}>نسخ</button>${ro?"":`<button type="button" class="btn sm" data-unlead>بدون Focal Point</button>`}</div>${o.leadPhone?"":'<small class="hint">لا يوجد رقم مسجّل لهذا الكادر. أدخله هنا ويُحفظ في سجله أيضاً.</small>'}</div></div>`};
   form.innerHTML=`<div class="dlg-h"><div><h2>${isNew?"عملية Outreach جديدة":"عملية <span class=\"mono\">"+esc(o.code)+"</span>"}</h2><span class="muted" style="font-size:12.5px">المكان والموعد والفريق</span></div><button type="button" class="btn sm" data-x aria-label="إغلاق">✕</button></div>
   <fieldset class="dlg-b" style="border:0;margin:0" ${ro?"disabled":""}>
     <div class="field"><label for="o-clinic">العيادة</label><select id="o-clinic">${clinicOpts(o.clinic)}</select></div>
@@ -977,11 +976,12 @@ function openOp(op,preset={}){
     if(t.dataset.sup)o.supplies[t.dataset.sup]=t.checked;
     if(t.dataset.lead){setLeader(t.dataset.lead);fillTeam()}
     if(t.dataset.team){const id=t.dataset.team;const s=S.staff.find(x=>x.id===id)||o.team.find(x=>x.id===id);o.team=o.team.filter(x=>x.id!==id);
-      if(t.checked&&s){o.team.push({id:s.id,name:s.name,role:s.role,phone:s.phone||""});if(!o.leader)setLeader(s.id)}
+      if(t.checked&&s){o.team.push({id:s.id,name:s.name,role:s.role,phone:s.phone||""})}
       else if(o.leader===id)setLeader(null);
       fillTeam()}};
   form.onclick=async e=>{
     if(e.target.closest("[data-x]")){dlg.close();return}
+    if(e.target.closest("[data-unlead]")){setLeader(null);fillTeam();return}
     if(e.target.closest("[data-copyph]")){const inp=$("#lead-phone");try{await navigator.clipboard.writeText(o.leadPhone);toast("نُسخ الرقم "+o.leadPhone)}catch(err){inp.select()}return}
     if(e.target.closest("[data-export]")){showExport(S.ops.find(x=>x.id===o.id)||o);return}
     if(e.target.closest("[data-postpone]")){const base=S.ops.find(x=>x.id===o.id);if(!base)return;const to=nextWorkDay(base.date);
@@ -990,11 +990,11 @@ function openOp(op,preset={}){
       if(await put("ops",id,rec)){dlg.close();toast(`أُجّلت إلى ${to}. أعد تأكيد الجاهزية.`)}return}
     if(e.target.closest("[data-addstaff]")){const name=$("#na-name").value.trim();if(!name){$("#na-name").focus();return}
       const s={id:newId("st"),name,role:$("#na-role").value,clinic:o.clinic,phone:$("#na-phone").value.trim()};
-      const {id,...body}=s;if(await put("staff",id,body)){if(!S.staff.some(x=>x.id===id))S.staff.push(s);o.team.push({id,name,role:s.role,phone:s.phone});if(!o.leader)setLeader(id);$("#na-name").value=$("#na-phone").value="";fillTeam();toast("أُضيف "+name+" للفريق")}}
+      const {id,...body}=s;if(await put("staff",id,body)){if(!S.staff.some(x=>x.id===id))S.staff.push(s);o.team.push({id,name,role:s.role,phone:s.phone});$("#na-name").value=$("#na-phone").value="";fillTeam();toast("أُضيف "+name+" للفريق")}}
     const d=e.target.closest("[data-del]");
     if(d){if(d.dataset.sure){if(await del("ops",o.id)){dlg.close();toast("حُذفت العملية "+o.code)}}else{d.dataset.sure=1;d.textContent="اضغط مرة أخرى للتأكيد"}}};
   form.onsubmit=async e=>{e.preventDefault();if(ro)return;
-    if(o.team.length&&!o.team.some(t=>t.id===o.leader)){$("#leadBox").scrollIntoView({block:"center"});toast("حدّد الـFocal Point قبل الحفظ");return}
+    if(o.leader&&!o.team.some(t=>t.id===o.leader))setLeader(null);
     const lp=(o.leadPhone||"").trim(),st=$("#o-status").value;
     const team=o.team.map(t=>({id:t.id,name:t.name,role:t.role,phone:t.id===o.leader?lp:(staffPhone(t.id)||t.phone||"")}));
     if(st==="Ready"&&!isReady(o)){toast("لا تصبح الزيارة «جاهزة» قبل اكتمال التأكيدات الأربعة.");return}
@@ -1064,7 +1064,7 @@ async function drawSheet(o){
   const nl=wrap(o.notes||"لا توجد ملاحظات.",`400 25px ${AR}`,CW-48).slice(0,Math.min(6,maxLines));
   box(M,y,CW,nl.length*40+40,C.soft,null);nl.forEach((l,i)=>txt(l,R-24,y+50+i*40,`400 25px ${AR}`,o.notes?C.ink:C.muted));
   const fy=H-210,sw2=(CW-60)/2;
-  [["Focal Point",R],["مدير العيادة",R-sw2-60]].forEach(([l,xr])=>{txt(l,xr,fy,`400 22px ${AR}`,C.muted);x.fillStyle=C.ink;x.fillRect(xr-sw2,fy+70,sw2,2)});
+  [[team.some(t=>t.id===o.leader)?"Focal Point":"عن الفريق",R],["مدير العيادة",R-sw2-60]].forEach(([l,xr])=>{txt(l,xr,fy,`400 22px ${AR}`,C.muted);x.fillStyle=C.ink;x.fillRect(xr-sw2,fy+70,sw2,2)});
   x.fillStyle=C.navy;x.fillRect(0,H-72,W,72);
   txt(`أُعدّت في ${iso(new Date())} الساعة ${nowHM()} · ${T("siteName")}`,R,H-27,`400 21px ${AR}`,C.pale);
   txt(`${cl.en} → ${pt.en||""}`,M,H-27,`400 20px ${AR}`,C.pale,"left","ltr");
