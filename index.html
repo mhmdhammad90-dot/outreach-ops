@@ -428,7 +428,49 @@ async function supaBoot(){
   sb.auth.onAuthStateChange((ev)=>{if(ev==="SIGNED_IN"||ev==="SIGNED_OUT"||ev==="TOKEN_REFRESHED")supaRole()});
   await supaRole();setLive();render()}
 function supaErr(e){const m=String(e&&e.message||"");if(/row-level security|permission|42501/i.test(m))return S.user?"حسابك غير مضاف للفريق بعد. اطلب من المشرف إضافة بريدك.":"سجّل الدخول أولاً لتتمكن من التعديل.";return "تعذّر الحفظ الآن. تحقق من الاتصال وحاول مرة أخرى."}
-function supaLogin(){
+const UDOM="mhmdhammad90-dot.github.io";
+const uEmail=u=>String(u||"").trim().toLowerCase()+"@"+UDOM;
+const isUser=em=>String(em||"").toLowerCase().endsWith("@"+UDOM);
+const uName=em=>isUser(em)?(((S.members||[]).find(m=>m.email.toLowerCase()===String(em).toLowerCase())||{}).name||String(em).split("@")[0]):String(em||"");
+function pinOk(p){return /^\d{6}$/.test(p)}
+function supaLogin(mode){
+  if(mode!=="email"){const dlg=$("#opDlg"),form=$("#opForm");form.onchange=form.oninput=null;
+    form.innerHTML=`<div class="dlg-h"><div><h2>تسجيل الدخول</h2><span class="muted" style="font-size:12.5px">باسم المستخدم والرمز. يبقى الدخول محفوظاً على هذا الجهاز.</span></div><button type="button" class="btn sm" data-x aria-label="إغلاق">✕</button></div>
+    <div class="dlg-b"><div class="field"><label for="lg-user">اسم المستخدم</label><input id="lg-user" dir="ltr" autocomplete="username" autocapitalize="off" spellcheck="false" required></div>
+    <div class="field"><label for="lg-pin">الرمز (6 أرقام)</label><input id="lg-pin" type="password" dir="ltr" inputmode="numeric" autocomplete="current-password" maxlength="6" required></div>
+    <p class="full" id="lg-msg" style="margin:0;font-size:13px;color:var(--bad)" hidden></p>
+    <p class="full muted" style="margin:0;font-size:12.5px">ليس لديك اسم مستخدم؟ <button type="button" class="linkbtn" data-email-login>ادخل برابط على بريدك</button></p></div>
+    <div class="dlg-f"><span></span><div class="filters"><button type="button" class="btn" data-x>إلغاء</button><button type="submit" class="btn primary" id="lg-btn">دخول</button></div></div>`;
+    form.onclick=e=>{if(e.target.closest("[data-x]"))dlg.close();if(e.target.closest("[data-email-login]"))supaLogin("email")};
+    form.onsubmit=async e=>{e.preventDefault();const u=$("#lg-user").value.trim(),pin=$("#lg-pin").value.trim(),msg=$("#lg-msg"),b=$("#lg-btn");
+      if(!u||!pinOk(pin)){msg.textContent="أدخل اسم المستخدم والرمز المكوّن من 6 أرقام.";msg.hidden=false;return}
+      b.disabled=true;b.textContent="جارٍ الدخول…";const {error}=await sb.auth.signInWithPassword({email:uEmail(u),password:pin});b.disabled=false;b.textContent="دخول";
+      if(error){msg.textContent=/rate|many/i.test(error.message)?"محاولات كثيرة. انتظر بضع دقائق ثم حاول مجدداً.":"اسم المستخدم أو الرمز غير صحيح.";msg.hidden=false;return}
+      dlg.close();toast("أهلاً "+u)};
+    if(!dlg.open)dlg.showModal();setTimeout(()=>$("#lg-user")?.focus(),50);return}
+  supaEmailLogin()}
+function pinPanel(){
+  if(!supaOn()||!S.user)return "";
+  const mine=isUser(S.user);
+  if(!mine&&!S.admin)return "";
+  return `<section class="panel"><div class="panel-h"><div><h2>${mine?"تغيير رمز الدخول":"الدخول باسم مستخدم ورمز"}</h2><p>${mine?`أنت داخل باسم <b dir="ltr">${esc(uName(S.user))}</b>. الرمز 6 أرقام.`:"أنشئ اسم مستخدم ورمزاً من 6 أرقام لتدخل بهما بدل رابط البريد. الحساب الجديد يأخذ صلاحية المشرف."}</p></div></div>
+    <form class="panel-b quick" id="pinForm" style="grid-template-columns:repeat(3,minmax(0,1fr)) auto">
+      ${mine?"":`<div class="field"><label for="pf-user">اسم المستخدم</label><input id="pf-user" dir="ltr" value="MHammad" autocapitalize="off" spellcheck="false" required></div>`}
+      <div class="field"><label for="pf-pin">${mine?"الرمز الجديد":"الرمز"} (6 أرقام)</label><input id="pf-pin" type="password" dir="ltr" inputmode="numeric" maxlength="6" autocomplete="new-password" required></div>
+      <div class="field"><label for="pf-pin2">تأكيد الرمز</label><input id="pf-pin2" type="password" dir="ltr" inputmode="numeric" maxlength="6" autocomplete="new-password" required></div>
+      <div class="filters"><button class="btn primary">${mine?"حفظ الرمز":"إنشاء والدخول به"}</button></div></form></section>`}
+async function pinSubmit(){
+  const pin=$("#pf-pin").value.trim(),pin2=$("#pf-pin2").value.trim();
+  if(!pinOk(pin)){toast("الرمز يجب أن يكون 6 أرقام.");return}if(pin!==pin2){toast("الرمزان غير متطابقين.");return}
+  if(isUser(S.user)){const {error}=await sb.auth.updateUser({password:pin});toast(error?"تعذّر تغيير الرمز. حاول مرة أخرى.":"تغيّر الرمز.");if(!error)render();return}
+  const u=$("#pf-user").value.trim();if(!/^[A-Za-z0-9._-]{3,30}$/.test(u)){toast("اسم المستخدم: 3 أحرف على الأقل، بالإنجليزية والأرقام فقط.");return}
+  const em=uEmail(u);
+  const m=await sb.from("members").upsert({email:em,name:u,role:"admin"});if(m.error){toast(supaErr(m.error));return}
+  const {data,error}=await sb.auth.signUp({email:em,password:pin});
+  if(error){toast(/registered|exists/i.test(error.message)?"اسم المستخدم مسجّل مسبقاً. ادخل به من «تسجيل الدخول».":"تعذّر إنشاء الحساب: "+error.message);return}
+  if(!data.session){toast("أُنشئ الحساب لكنه يحتاج تفعيلاً من إعدادات Supabase قبل الدخول به.");return}
+  toast("تم. أنت الآن داخل باسم "+u);await supaRole()}
+function supaEmailLogin(){
   const dlg=$("#opDlg"),form=$("#opForm");form.onchange=form.oninput=null;
   form.innerHTML=`<div class="dlg-h"><div><h2>تسجيل الدخول</h2><span class="muted" style="font-size:12.5px">نرسل لك رابط دخول على بريدك، بدون كلمة مرور</span></div><button type="button" class="btn sm" data-x aria-label="إغلاق">✕</button></div>
   <div class="dlg-b"><div class="field full"><label for="lg-email">البريد الإلكتروني</label><input id="lg-email" type="email" dir="ltr" autocomplete="email" required placeholder="name@example.org"></div>
@@ -460,7 +502,7 @@ function migrateBanner(){const m=pendingLocal();if(!m)return "";
   return `<div class="banner localbar"><span>في هذا المتصفح بيانات من النسخة السابقة غير موجودة في قاعدة البيانات المشتركة: ${m.staff.length} كادر و${m.ops.length} عملية.</span><span class="filters"><button class="btn sm primary" data-act="migrate">نقلها للقاعدة المشتركة</button>${S.admin&&m.extra.length?`<button class="btn sm" data-act="migrate-replace" title="يحذف من القاعدة ما ليس في نسخة هذا المتصفح">نقلها واعتماد نسختي فقط (حذف ${m.extra.length})</button>`:""}<button class="btn sm" data-act="migrate-skip">تجاهل</button></span></div>`}
 function membersPanel(){
   if(!supaOn())return "";
-  const rows=(S.members||[]).map(m=>`<tr><td dir="ltr" style="text-align:right" class="mono">${esc(m.email)}</td><td>${esc(m.name||"")}</td><td>${m.role==="admin"?"مشرف":"عضو فريق"}</td>
+  const rows=(S.members||[]).map(m=>`<tr><td dir="ltr" style="text-align:right" class="mono">${esc(isUser(m.email)?m.name+" (اسم مستخدم)":m.email)}</td><td>${esc(m.name||"")}</td><td>${m.role==="admin"?"مشرف":"عضو فريق"}</td>
     <td>${m.email.toLowerCase()===String(S.user||"").toLowerCase()?'<span class="muted">أنت</span>':`<div class="filters" style="flex-wrap:nowrap"><button class="btn sm" data-act="mem-role" data-email="${esc(m.email)}" data-role="${m.role==="admin"?"editor":"admin"}">${m.role==="admin"?"جعله عضواً":"جعله مشرفاً"}</button>${S.confirmMem===m.email?`<button class="btn sm danger" data-act="mem-del" data-email="${esc(m.email)}">تأكيد الإزالة</button>`:`<button class="btn sm danger" data-act="mem-ask" data-email="${esc(m.email)}">إزالة</button>`}</div>`}</td></tr>`).join("");
   return `<section class="panel"><div class="panel-h"><div><h2>الفريق والصلاحيات (${(S.members||[]).length})</h2><p>من تضيف بريده هنا يستطيع تسجيل الدخول والإضافة والتعديل. الحذف وهذه اللوحة للمشرفين فقط.</p></div></div>
     <form class="panel-b quick" id="memForm" style="grid-template-columns:minmax(0,1.4fr) minmax(0,1fr) minmax(0,1fr) auto">
@@ -556,6 +598,7 @@ function vAdmin(){
   const cnt=id=>POINTS.filter(p=>p.clinic===id).length;
   return `<div class="section-head"><div><h1>لوحة المشرف</h1><p>أضف أو عدّل أو احذف العيادات والنقاط وإحداثياتها، وغيّر عناوين الموقع ونصوصه.</p></div>
     <div class="filters">${S.mode==="local"?`<button class="btn" data-act="admin-pass">تغيير كلمة المرور</button>`:""}${S.mode==="local"?`<button class="btn" data-act="admin-out">خروج من وضع المشرف</button>`:""}</div></div>
+  ${pinPanel()}
   ${membersPanel()}
   <section class="panel"><div class="panel-h"><div><h2>خطة التغذية المتكاملة · نوفمبر 2026</h2><p>إدراج زيارات الخطة المعتمدة (22 مخيماً × يومان = 44 زيارة) مع مشاركي الحماية. لا يكرر ما أُدرج سابقاً.</p></div><button class="btn primary sm" data-act="import-plan">إدراج زيارات الخطة (${S.ops.filter(o=>o.plan==="nov26").length}/44 مدرجة)</button></div></section>
   <section class="panel"><div class="panel-h"><div><h2>العيادات (${CLINICS.length})</h2><p>حذف العيادة متاح بعد نقل نقاطها لعيادة أخرى</p></div><button class="btn primary sm" data-act="ent-new" data-kind="clinic">+ إضافة عيادة</button></div>
@@ -631,7 +674,7 @@ const cur=()=>{const h=location.hash.slice(1);return h==="admin"||VIEWS.some(v=>
 function renderNav(){
   const counts={ops:S.ops.length,clinics:CLINICS.length,points:POINTS.length,staff:S.staff.length};
   $("#nav").innerHTML=VIEWS.map(([k,l])=>`<a href="#${k}" ${cur()===k?'aria-current="page"':""}><span>${esc(T("nav."+k))}</span>${counts[k]!=null?`<span class="count">${counts[k]}</span>`:""}</a>`).join("")+(S.admin?`<a href="#admin" class="nav-admin" ${cur()==="admin"?'aria-current="page"':""}><span>لوحة المشرف</span></a>`:"");
-  const ab=$("#adminBtn");if(ab&&supaOn()){ab.hidden=false;ab.innerHTML=S.user?`<span style="display:block;font-size:11px;opacity:.75">${S.admin?"مشرف":S.role?"عضو فريق":"غير مضاف للفريق"}</span><span dir="ltr">${esc(S.user)}</span> · خروج`:"تسجيل الدخول للتعديل"}
+  const ab=$("#adminBtn");if(ab&&supaOn()){ab.hidden=false;ab.innerHTML=S.user?`<span style="display:block;font-size:11px;opacity:.75">${S.admin?"مشرف":S.role?"عضو فريق":"غير مضاف للفريق"}</span><span dir="ltr">${esc(uName(S.user))}</span> · خروج`:"تسجيل الدخول للتعديل"}
   else if(ab){ab.hidden=S.mode!=="local"&&!S.admin;ab.textContent=S.admin?(S.mode==="local"?"خروج من وضع المشرف":"وضع المشرف مفعّل"):"دخول المشرف"}}
 
 function opts(list,sel,all){return (all?`<option value="">${all}</option>`:"")+list.map(([v,l])=>`<option value="${esc(v)}" ${v===sel?"selected":""}>${esc(l)}</option>`).join("")}
@@ -1167,6 +1210,7 @@ document.addEventListener("change",async e=>{
 });
 document.addEventListener("input",e=>{if(e.target.id==="q"){S.f.q=e.target.value;clearTimeout(render.t);render.t=setTimeout(render,180)}});
 document.addEventListener("submit",async e=>{
+  if(e.target.id==="pinForm"){e.preventDefault();await pinSubmit();return}
   if(e.target.id==="memForm"){e.preventDefault();const em=$("#mf-email").value.trim().toLowerCase();if(!em)return;const {error}=await sb.from("members").upsert({email:em,name:$("#mf-name").value.trim(),role:$("#mf-role").value});if(error){toast(supaErr(error));return}toast("أُضيف "+em+". يستطيع الآن تسجيل الدخول ببريده.");supaMembers();return}
   if(e.target.id==="labelsForm"){e.preventDefault();const labels={};e.target.querySelectorAll("[data-lb]").forEach(i=>{if(i.value.trim())labels[i.dataset.lb]=i.value.trim()});if(await saveConfig({labels}))toast("حُفظت العناوين");return}
   if(e.target.id!=="staffForm")return;e.preventDefault();
