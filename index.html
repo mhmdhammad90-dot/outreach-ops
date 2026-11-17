@@ -207,6 +207,11 @@ dialog::backdrop{background:rgba(10,20,20,.45)}
 .leadbar .hint{font-size:11.5px;color:var(--muted);max-width:260px}
 .exp{padding:16px 18px;background:var(--sunk)}
 .exp-prev{display:grid;place-items:center;min-height:200px}
+.newpt[hidden]{display:none}
+.newpt{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr) minmax(0,1.4fr) auto;gap:6px;margin-top:6px}
+.newpt input,.newpt select{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:6px 8px;min-width:0;font-size:13px}
+@media (max-width:560px){.newpt{grid-template-columns:1fr 1fr}}
+.planbox{display:flex;gap:8px;align-items:center;font-size:13px;font-weight:500;color:var(--accent)}
 .btn.wa{background:#1f8f4e;border-color:#1f8f4e;color:#fff}
 .btn.wa:hover{filter:brightness(1.08)}
 .exp-prev img{display:block;max-height:60vh;width:auto;max-width:100%;border-radius:6px;box-shadow:0 6px 24px rgba(0,10,60,.18)}
@@ -981,12 +986,14 @@ function openOp(op,preset={}){
   form.innerHTML=`<div class="dlg-h"><div><h2>${isNew?"عملية Outreach جديدة":"عملية <span class=\"mono\">"+esc(o.code)+"</span>"}</h2><span class="muted" style="font-size:12.5px">المكان والموعد والفريق</span></div><button type="button" class="btn sm" data-x aria-label="إغلاق">✕</button></div>
   <fieldset class="dlg-b" style="border:0;margin:0" ${ro?"disabled":""}>
     <div class="field"><label for="o-clinic">العيادة</label><select id="o-clinic">${clinicOpts(o.clinic)}</select></div>
-    <div class="field"><label for="o-point">مكان الزيارة</label><select id="o-point"></select><small class="coords" id="o-coords"></small></div>
+    <div class="field"><label for="o-point">مكان الزيارة</label><select id="o-point"></select><small class="coords" id="o-coords"></small>${S.admin&&!ro?`<button type="button" class="linkbtn" data-newpt style="justify-self:start;font-size:12.5px">+ مكان جديد غير موجود في القائمة</button>
+      <div class="newpt" id="newPt" hidden><input id="np-ar" placeholder="اسم المكان *" aria-label="اسم المكان"><select id="np-type" aria-label="النوع">${opts(Object.entries(PT_TYPES),"Camp")}</select><input id="np-ll" dir="ltr" placeholder="الإحداثيات أو رابط الخريطة (اختياري)" aria-label="الإحداثيات"><button type="button" class="btn sm primary" data-savept>إضافة</button></div>`:""}</div>
     <div class="field"><label for="o-date">التاريخ</label><input id="o-date" type="date" value="${esc(o.date)}" required></div>
     <div class="field" style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><div class="field"><label for="o-dep">الانطلاق</label><input id="o-dep" type="time" value="${esc(o.dep)}"></div><div class="field"><label for="o-ret">العودة</label><input id="o-ret" type="time" value="${esc(o.ret)}"></div></div>
     <div class="field"><label for="o-service">نوع الخدمة</label><select id="o-service">${opts(SERVICES,o.service)}</select></div>
     <div class="field"><label for="o-status">الحالة</label><select id="o-status">${opts(STATUSES,o.status)}</select></div>
     <div class="prep"><div class="ttl"><span>التنسيق قبل الزيارة</span><span id="o-rbar">${rbar(o)}</span></div>
+      ${S.admin&&!ro?`<label class="full planbox"><input type="checkbox" id="o-plan" ${o.plan==="nov26"?"checked":""}> ضمن خطة التغذية المتكاملة · نوفمبر 2026</label>`:(o.plan==="nov26"?`<p class="full sub2">ضمن خطة نوفمبر 2026</p>`:"")}
       <div class="field"><label for="o-vtype">نوع الزيارة</label><select id="o-vtype">${opts(VTYPES,o.vtype||"","—")}</select></div>
       <div class="field"><label for="o-prot">مشارك الحماية</label><input id="o-prot" value="${esc(o.protection||"")}" placeholder="من خطة التوزيع"></div>
       <div class="field"><label for="o-sfn">مسؤول المخيم (Site Focal Point)</label><input id="o-sfn" value="${esc(o.siteFP.name||"")}" placeholder="الاسم"></div>
@@ -1006,8 +1013,20 @@ function openOp(op,preset={}){
     <div class="field full"><label for="o-notes">ملاحظات</label><textarea id="o-notes" rows="2" placeholder="المستلزمات الطبية، التنسيق مع المجتمع، ملاحظات التنقل…">${esc(o.notes||"")}</textarea></div>
   </fieldset>
   <div class="dlg-f"><div class="filters">${!isNew&&!ro&&S.admin?`<button type="button" class="btn danger" data-del>حذف</button>`:""}${!isNew&&!ro&&o.status!=="Completed"?`<button type="button" class="btn" data-postpone>تأجيل ليوم العمل التالي</button>`:""}${!isNew?`<button type="button" class="btn" data-export>بطاقة الزيارة PDF / JPG</button>`:""}</div><div class="filters"><button type="button" class="btn" data-x>${ro?"إغلاق":"إلغاء"}</button>${ro?"":`<button type="submit" class="btn primary">${isNew?"حفظ وإعداد بطاقة الزيارة":"حفظ التعديلات"}</button>`}</div></div>`;
-  const fillPoints=()=>{const pts=POINTS.filter(p=>p.clinic===o.clinic);if(!pts.some(p=>p.id===o.point))o.point=pts[0]?.id;$("#o-point").innerHTML=opts(pts.map(p=>[p.id,`${p.ar} (${PT_TYPES[p.type]||p.type})`]),o.point);showCoords()};
+  const fillPoints=()=>{const own=POINTS.filter(p=>p.clinic===o.clinic),cur=POINTS.find(p=>p.id===o.point);
+    const others=POINTS.filter(p=>p.clinic!==o.clinic&&(S.admin||(cur&&p.id===cur.id)));
+    if(!own.some(p=>p.id===o.point)&&!others.some(p=>p.id===o.point))o.point=own[0]?.id||others[0]?.id;
+    const lab=p=>`${p.ar} (${PT_TYPES[p.type]||p.type})`;
+    const grp=(t,list)=>list.length?`<optgroup label="${esc(t)}">${list.map(p=>`<option value="${esc(p.id)}" ${p.id===o.point?"selected":""}>${esc(lab(p))}</option>`).join("")}</optgroup>`:"";
+    $("#o-point").innerHTML=others.length?grp("مخيمات "+clinic(o.clinic).ar,own)+CLINICS.filter(c=>c.id!==o.clinic).map(c=>grp("تابعة لـ"+c.ar,others.filter(p=>p.clinic===c.id))).join(""):own.map(p=>`<option value="${esc(p.id)}" ${p.id===o.point?"selected":""}>${esc(lab(p))}</option>`).join("");
+    showCoords()};
   const showCoords=()=>{const p=point(o.point),el=$("#o-coords");if(!el)return;el.innerHTML=p.lat!==""&&p.lat!=null&&p.lat!==undefined?`<span class="mono">${(+p.lat).toFixed(5)}, ${(+p.lon).toFixed(5)}</span> · <a href="${mapsUrl(p.lat,p.lon)}" target="_blank" rel="noopener">فتح في الخرائط</a>`:"لا توجد إحداثيات لهذا المكان"};
+  form.addEventListener("click",async ev=>{
+    if(ev.target.closest("[data-newpt]")){const b=$("#newPt");b.hidden=!b.hidden;if(!b.hidden)$("#np-ar").focus();return}
+    if(!ev.target.closest("[data-savept]"))return;
+    const ar=$("#np-ar").value.trim();if(!ar){$("#np-ar").focus();return}
+    const c=parseCoords($("#np-ll").value);const np={id:"LOC-"+Date.now().toString(36).toUpperCase(),ar,en:"",addr:"",note:"",clinic:o.clinic,type:$("#np-type").value,visits:0,lat:c?c.lat:"",lon:c?c.lon:""};
+    if(await saveConfig({points:[...POINTS,np]})){o.point=np.id;$("#newPt").hidden=true;$("#np-ar").value=$("#np-ll").value="";fillPoints();toast("أُضيف "+ar+" إلى "+clinic(o.clinic).ar)}});
   const fillTeam=()=>{$("#teamBox").innerHTML=teamHTML();$("#leadBox").innerHTML=leadHTML();$("#teamCount").textContent=`· تم اختيار ${o.team.length}`};
   const showRep=()=>{$("#repBox").hidden=$("#o-status").value!=="Completed"};
   const setLeader=id=>{o.leader=id;o.leadPhone=id?(staffPhone(id)||(o.team.find(t=>t.id===id)||{}).phone||""):""};
@@ -1044,7 +1063,7 @@ function openOp(op,preset={}){
     const team=o.team.map(t=>({id:t.id,name:t.name,role:t.role,phone:t.id===o.leader?lp:(staffPhone(t.id)||t.phone||"")}));
     if(st==="Ready"&&!isReady(o)){toast("لا تصبح الزيارة «جاهزة» قبل اكتمال التأكيدات الأربعة.");return}
     const rec={...(op?Object.fromEntries(Object.entries(op).filter(([k])=>k!=="id")):{}),code:o.code,date:$("#o-date").value,clinic:o.clinic,point:$("#o-point").value,service:$("#o-service").value,status:st,dep:$("#o-dep").value,ret:$("#o-ret").value,team,leader:o.leader||null,notes:$("#o-notes").value.trim(),
-      vtype:$("#o-vtype").value,protection:$("#o-prot").value.trim(),siteFP:{name:$("#o-sfn").value.trim(),phone:$("#o-sfp").value.trim()},checks:{...o.checks},supplies:{...o.supplies},flag:$("#o-flag").value.trim(),createdAt:o.createdAt||new Date().toISOString(),updatedAt:new Date().toISOString()};
+      vtype:$("#o-vtype").value,...($("#o-plan")?{plan:$("#o-plan").checked?"nov26":null}:{}),protection:$("#o-prot").value.trim(),siteFP:{name:$("#o-sfn").value.trim(),phone:$("#o-sfp").value.trim()},checks:{...o.checks},supplies:{...o.supplies},flag:$("#o-flag").value.trim(),createdAt:o.createdAt||new Date().toISOString(),updatedAt:new Date().toISOString()};
     if(st==="Completed"){const n=id=>{const v=$(id).value;return v===""?0:Math.max(0,parseInt(v,10)||0)};rec.report={...Object.fromEntries(REPF.map(([k])=>[k,n("#r-"+k)])),topics:TOPICS.map(([k])=>k).filter(k=>form.querySelector(`[data-top="${k}"]`)?.checked),access:$("#r-acc").value.trim(),note:$("#r-note").value.trim()}}
     else if(o.report)rec.report=o.report;else delete rec.report;
     if(!rec.date){$("#o-date").focus();return}
